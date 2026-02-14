@@ -1,0 +1,753 @@
+Words Worth Design Spec
+
+# Personal Blog Design Specification
+**Version 1.0** | Typography-First Editorial Design
+
+---
+
+## 🎨 Visual Design System
+
+### Color Palette
+
+```css
+/* Primary Colors */
+--background: #fefefe (near-white, soft and clean)
+--foreground: #1a1a1a (deep charcoal for text)
+--card: #ffffff (pure white for cards)
+
+/* Accent Colors */
+--primary: #2a2a2a (dark gray for emphasis)
+--secondary: #f5f5f5 (light gray backgrounds)
+--muted: #fafafa (subtle backgrounds)
+--muted-foreground: #737373 (secondary text)
+--accent: #e5e5e5 (hover states)
+--border: rgba(0, 0, 0, 0.08) (subtle borders)
+```
+
+### Typography System
+
+**Base Font Size:** 18px (larger than typical for enhanced readability)
+
+**Font Families:**
+- Primary: System font stack (default)
+- Serif (for ornaments): Georgia, Times New Roman, serif
+- Letter-spacing adjustments for visual refinement
+
+**Type Scale:**
+```
+h1: 4-4.5rem (64-72px) | Line-height: 1.1 | Letter-spacing: -0.02em
+h2: 3rem (48px) | Line-height: 1.3 | Letter-spacing: -0.01em  
+h3: 1.875rem (30px) | Line-height: 1.4
+Body: 1rem (18px) | Line-height: 1.75 (generous for reading)
+Small: 0.75rem (12px) | Uppercase tracking: widest
+```
+
+**Font Weights:**
+- Normal: 400 (body text)
+- Medium: 500 (headings, labels)
+- Light: 300 (special treatments)
+
+**Special Typography Features:**
+1. **Drop Caps** - First letter enlarged to 4.5rem, floated left
+2. **Pull Quotes** - 2xl-3xl italic text with left border accent
+3. **Ornamental Dividers** - Fleuron symbol "❦" in Georgia serif
+
+### Spacing & Layout
+
+**Container Max-Widths:**
+- Header: 80rem (1280px)
+- Hero Section: 64rem (1024px)
+- Blog Grid: 72rem (1152px)
+- Article Content: 48rem (768px)
+- About Page: 64rem (1024px)
+
+**Padding Scale:**
+```
+px-4: 1rem (mobile)
+px-6: 1.5rem (tablet+)
+py-8: 2rem (sections)
+py-12: 3rem (major sections)
+py-16: 4rem (page sections)
+py-20: 5rem (large sections)
+```
+
+**Grid System:**
+- Blog Cards: 2-column grid on desktop (gap: 2rem)
+- About Features: 3-column grid on desktop (gap: 3rem)
+- Responsive: Collapses to single column on mobile
+
+### Borders & Radius
+
+**Border Widths:**
+- Default: 1px
+- Accent borders: 2-3px
+- Left accent bars: 1-2px (grows on hover)
+
+**Border Radius:**
+- Cards: 0.5rem (subtle, refined)
+- No border radius on images (editorial style)
+
+### Shadows & Effects
+
+**Hover Effects:**
+- Card lift: translateY(-4px)
+- Border color: foreground/20% opacity
+- Smooth transitions: 300ms duration
+
+**No drop shadows** - Uses borders instead for clean, editorial aesthetic
+
+---
+
+## 🧩 Component Specifications
+
+### 1. Header Component
+
+**Structure:**
+```
+Header (Sticky, backdrop-blur)
+├── Container (max-w-5xl, flex, space-between)
+│   ├── Logo/Title (clickable)
+│   │   ├── "Ideas & Musings" (text-2xl, tracking-tight)
+│   │   └── "A Personal Journal" (text-xs, uppercase, tracking-widest)
+│   └── Navigation
+│       ├── Home Link
+│       └── About Link
+```
+
+**Styling:**
+- Background: background/95 with backdrop-blur-sm
+- Border: 1px solid border (bottom only)
+- Padding: py-8, px-6
+- Position: sticky, top-0, z-50
+
+**Interactive States:**
+- Logo hover: translateX(-2px) over 200ms
+- Nav links: 
+  - Default: muted-foreground
+  - Hover: foreground, translateY(-1px)
+  - Active: foreground with 1px underline (animated)
+
+**Animation:**
+- Underline uses layoutId="underline" for smooth transition between pages
+
+### 2. Blog Card Component (4 Variants)
+
+The design rotates through 4 card variants for visual variety:
+
+**Variant 1: Large Number Minimal**
+```
+Card (border, hover border-foreground/20, p-8)
+├── Background Number (top-right, 8rem, opacity-10)
+├── Content (z-10)
+│   ├── Category (uppercase, xs, tracking-widest)
+│   ├── Title (3xl, leading-tight)
+│   ├── Excerpt (muted-foreground, leading-relaxed)
+│   └── Footer (border-top, flex justify-between)
+│       ├── Date
+│       └── Read Time
+```
+
+**Variant 2: Centered Elegant**
+```
+Card (border, p-12, text-center)
+├── Ornament "❦" (4xl, opacity-40)
+├── Category (uppercase, xs)
+├── Title (2xl, px-4)
+├── Excerpt (text-sm, mb-8)
+└── Meta (Date · Read Time)
+```
+
+**Variant 3: Quote Style**
+```
+Card (border, p-10)
+├── Quote Mark (6xl, serif, opacity-20)
+├── Title (2xl, italic, font-light)
+├── Excerpt (text-sm)
+└── Footer (flex justify-between)
+    ├── Category (uppercase)
+    └── Date · Read Time
+```
+
+**Variant 4: Sidebar Accent**
+```
+Card (border, overflow-hidden)
+├── Left Accent Bar (w-1, bg-foreground, hover:w-2)
+└── Content (pl-10, p-8)
+    ├── Category (uppercase, xs)
+    ├── Title (2xl)
+    ├── Excerpt
+    └── Meta (border-top, dot separator)
+```
+
+**Common Interactions:**
+- Hover: translateY(-4px)
+- Border: Changes from border to foreground/20
+- Cursor: pointer
+- Animation: Fade-in from opacity 0, y: 20, staggered by 50ms
+
+**Rotation Pattern:**
+- Post index % 4 determines variant
+- Creates visual rhythm and variety
+
+### 3. Blog Post View Component
+
+**Layout Structure:**
+```
+Container (max-w-3xl, px-6, py-12)
+├── Back Button (ghost variant, hover effects)
+├── Article Header
+│   ├── Category Badge (uppercase, xs, tracking-widest)
+│   ├── Title (5xl-6xl, tracking-tight, leading-1.1)
+│   └── Meta (Date · Read Time with dot separator)
+├── Ornamental Divider (❦)
+├── Article Content
+│   ├── First Paragraph (drop-cap)
+│   ├── Middle Paragraphs
+│   ├── Pull Quote (at midpoint)
+│   └── Remaining Paragraphs
+└── Footer Ornament (divider with ❦)
+```
+
+**Special Features:**
+
+1. **Drop Cap** (First paragraph only)
+   - First letter: 4.5rem, float left
+   - Margin: 0.1em 0.15em 0 0
+   - Line-height: 0.85
+
+2. **Pull Quote** (Inserted at content midpoint)
+   - Takes first sentence of middle paragraph
+   - 2xl-3xl font size
+   - Italic, font-light
+   - 2px left border (foreground)
+   - pl-8, pr-4
+   - Slides in from left: opacity 0, x: -20
+
+3. **Paragraph Styling**
+   - Font-size: 1.125rem (18px → text-lg)
+   - Line-height: 1.75
+   - Opacity: 90%
+   - Spacing: 2rem between paragraphs
+
+**Animations:**
+- Header: opacity 0, y: 20 → 1, 0 (500ms)
+- Back button: opacity 0, x: -20 → 1, 0 (300ms)
+- Paragraphs: Staggered fade-in, 50ms delay each
+- Pull quote: 500ms delay, slides from left
+
+### 4. About Page Component
+
+**Layout:**
+```
+Container (max-w-4xl, px-6, py-16)
+├── Header Section (text-center)
+│   ├── Ornament "❦"
+│   ├── Title (5xl-6xl)
+│   ├── Subtitle (xl, muted-foreground)
+│   └── Decorative Divider (lines + dot)
+├── Feature Grid (3 columns)
+│   ├── Feature 1 (01, From the Heart)
+│   ├── Feature 2 (02, Ideas & Insights)
+│   └── Feature 3 (03, Life Lessons)
+└── Welcome Card (border, p-12-16)
+    ├── Heading (3xl, text-center)
+    ├── Content (3 paragraphs, drop-cap on first)
+    └── Footer Ornament
+```
+
+**Feature Cards:**
+- Large number (6xl, font-light, opacity-20)
+- Title (xl)
+- Description (sm, muted-foreground)
+- Hover: Number opacity increases to 30%
+
+**Welcome Card:**
+- Border: 1px solid border
+- Max-width: 42rem (centered)
+- First paragraph uses drop-cap
+- Staggered paragraph animations
+
+### 5. Hero Section
+
+**Structure:**
+```
+Section (border-bottom, py-24-32)
+└── Container (max-w-4xl, text-center)
+    ├── Ornament "❦" (4xl, muted/40)
+    ├── Title (6xl-7xl, tight tracking, leading-1.1)
+    │   "Words Worth" 
+    │   "Remembering"
+    ├── Subtitle (xl, muted-foreground, leading-relaxed)
+    └── Decorative Divider
+```
+
+**Typography Specs:**
+- Title: Line breaks for dramatic effect
+- Spacing: mb-8 between elements
+- Fade-in: opacity 0, y: 30 → 1, 0 (600ms)
+
+---
+
+## 🎭 Interaction Patterns
+
+### Hover States
+
+**Cards:**
+- Transform: translateY(-4px)
+- Border: border → foreground/20
+- Duration: 300ms
+- Timing: ease-out
+
+**Navigation:**
+- Transform: translateY(-1px)
+- Color: muted-foreground → foreground
+- Underline appears with layout animation
+
+**Back Button:**
+- Arrow: translateX(-1px) on hover
+- Color: muted-foreground → foreground
+
+**Ornaments:**
+- Opacity increases (40 → 60%)
+- Duration: 300ms
+
+### Animations
+
+**Page Entrance:**
+- Components fade in from opacity 0
+- Slight y-offset (10-30px)
+- Staggered delays for rhythm
+
+**Card Grid:**
+- Cards appear sequentially
+- Delay: index × 50ms
+- Creates flowing entrance
+
+**Active Navigation:**
+- Underline slides between links
+- Uses Motion's layoutId
+- Smooth, shared element transition
+
+### Transitions
+
+**Standard Duration:** 300ms
+**Long Duration:** 400-600ms (page-level)
+**Micro Duration:** 200ms (small UI)
+
+**Easing:**
+- Default: ease-out
+- Layout animations: ease-in-out
+
+---
+
+## 📐 Layout Specifications
+
+### Grid System
+
+**Blog Posts Grid:**
+```css
+display: grid;
+grid-template-columns: repeat(2, 1fr);
+gap: 2rem;
+max-width: 72rem;
+
+@media (max-width: 768px) {
+  grid-template-columns: 1fr;
+}
+```
+
+**About Features Grid:**
+```css
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+gap: 3rem;
+
+@media (max-width: 768px) {
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+```
+
+### Responsive Breakpoints
+
+- **Mobile:** < 768px
+- **Tablet:** 768px - 1024px
+- **Desktop:** > 1024px
+
+**Key Changes:**
+- Grids collapse to single column
+- Title sizes reduce (6xl → 5xl)
+- Padding reduces (py-32 → py-24)
+- Pull quotes: 3xl → 2xl
+
+### Content Width Hierarchy
+
+```
+Widest:  Blog Grid (72rem)
+Wide:    Hero, About (64rem)
+Medium:  Header (80rem)
+Narrow:  Article (48rem)
+```
+
+---
+
+## 🎬 User Experience Flows
+
+### Navigation Flow
+
+```
+1. Landing (Home View)
+   ├─→ Click Post → Blog Post View → Back to Home
+   ├─→ Click About → About View → Navigate Home
+   └─→ Click Logo → Home View (from anywhere)
+```
+
+**State Management:**
+- currentView: 'home' | 'about' | 'post'
+- selectedPost: BlogPost | null
+- Navigation clears selectedPost except when viewing post
+
+### Reading Experience
+
+**Article View Optimizations:**
+1. Generous line-height (1.75)
+2. Comfortable measure (48rem max-width)
+3. Visual breaks (ornaments, pull quotes)
+4. Progressive disclosure (fade-in paragraphs)
+5. Clear hierarchy (category → title → meta → content)
+
+### Micro-Interactions
+
+1. **Card Hover:**
+   - User hovers → card lifts
+   - Border intensifies
+   - Internal elements may shift
+   - Smooth return on mouse out
+
+2. **Navigation:**
+   - Click triggers immediate view change
+   - Underline slides to new position
+   - Content fades in with animation
+
+3. **Back Button:**
+   - Arrow slides left on hover
+   - Click returns to home
+   - Previous scroll position not preserved
+
+---
+
+## 📝 Content Structure
+
+### Blog Post Data Model
+
+```typescript
+interface BlogPost {
+  id: number;
+  title: string;
+  excerpt: string;
+  content: string;        // Paragraphs separated by \n\n
+  date: string;           // Format: "October 20, 2025"
+  category: string;       // e.g., "Mindfulness", "Lifestyle"
+  image: string;          // Empty string (text-only design)
+  readTime: string;       // Format: "4 min read"
+}
+```
+
+### Content Guidelines
+
+**Titles:**
+- 4-8 words optimal
+- Evocative, not clickbait
+- Title case
+
+**Excerpts:**
+- 1-2 sentences
+- 15-25 words
+- Intriguing summary
+
+**Content:**
+- 3-5 paragraphs
+- 150-300 words per paragraph
+- Conversational, personal tone
+- Paragraph breaks with \n\n
+
+**Categories:**
+- Mindfulness
+- Lifestyle  
+- Personal Growth
+- Books & Learning
+- (Single word or two words max)
+
+---
+
+## 🎨 Decorative Elements
+
+### Ornaments
+
+**Primary Symbol:** ❦ (fleuron)
+**Usage:**
+- Page section dividers
+- Center of attention markers
+- Footer accents
+
+**Styling:**
+```css
+.ornament {
+  font-family: Georgia, serif;
+  font-size: 1.2em;
+  color: var(--muted-foreground);
+}
+```
+
+**Sizes by Context:**
+- Hero/About header: 4xl (2.25rem)
+- Section dividers: 2xl (1.5rem)
+- Footer: xl (1.25rem)
+
+### Dividers
+
+**Horizontal Rule with Ornament:**
+```
+─────── ● ───────
+(line)  (dot)  (line)
+
+Structure:
+<div flex items-center>
+  <div h-px w-16 bg-border></div>
+  <div w-1.5 h-1.5 rounded-full bg-border></div>
+  <div h-px w-16 bg-border></div>
+</div>
+```
+
+**Simple Border:**
+- Bottom borders on sections: border-b border-border
+- Top borders on card footers: border-t border-border
+
+### Special Typography
+
+**Uppercase Labels:**
+- Text: xs (0.75rem)
+- Tracking: tracking-widest
+- Color: muted-foreground
+- Use: Categories, meta labels
+
+**Quote Marks:**
+- Size: 6xl (3.75rem)
+- Font: serif
+- Opacity: 20%
+- Position: Absolute or inline
+
+**Large Numbers:**
+- Size: 8rem (card variant 1) or 6xl (about page)
+- Weight: font-light
+- Opacity: 10-20%
+- Purpose: Decorative background
+
+---
+
+## 🔧 Technical Implementation Notes
+
+### Required Libraries
+
+```json
+{
+  "motion/react": "for animations (formerly framer-motion)",
+  "lucide-react": "for ArrowLeft icon only",
+  "react": "state management, components"
+}
+```
+
+### Key React Patterns
+
+**State Structure:**
+```typescript
+const [currentView, setCurrentView] = useState<'home' | 'about' | 'post'>('home');
+const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
+```
+
+**Navigation Handler:**
+```typescript
+const handleNavigate = (view: 'home' | 'about') => {
+  setCurrentView(view);
+  setSelectedPost(null);  // Always clear selected post
+};
+```
+
+**Post Selection:**
+```typescript
+const handlePostClick = (post: BlogPost) => {
+  setSelectedPost(post);
+  setCurrentView('post');
+};
+```
+
+### Animation Implementation
+
+**Motion Components:**
+- Use `motion.div`, `motion.article`, `motion.button`
+- Common pattern: initial={{ opacity: 0, y: 20 }}
+- Animate: opacity: 1, y: 0
+- Transitions with delay for staggering
+
+**Layout Animations:**
+- Navigation underline uses `layoutId="underline"`
+- Automatically animates position between elements
+
+---
+
+## 📱 Responsive Design
+
+### Mobile (<768px)
+
+**Changes:**
+- Single column layouts
+- Reduced font sizes (h1: 5xl instead of 6xl)
+- Reduced padding (py-24 instead of py-32)
+- Pull quotes: 2xl instead of 3xl
+- Navigation: Maintains horizontal layout (compact)
+
+### Tablet (768px-1024px)
+
+**Changes:**
+- 2-column grid for blog posts maintained
+- About page: May stack to 2 columns depending on space
+- Font sizes: Desktop sizes maintained
+- Container padding: Full desktop spacing
+
+### Desktop (>1024px)
+
+**Optimal Layout:**
+- Full 2-column blog grid
+- 3-column about features
+- All spacing at maximum
+- Largest typography
+
+---
+
+## ♿ Accessibility Notes
+
+**Semantic HTML:**
+- `<header>` for header
+- `<article>` for blog cards and posts
+- `<nav>` for navigation
+- Heading hierarchy (h1 → h2 → h3)
+
+**Interactive Elements:**
+- All clickable elements are `<button>` elements
+- Keyboard accessible (native button behavior)
+- Hover states have sufficient contrast
+
+**Reading Experience:**
+- High contrast text (foreground on background)
+- Generous line-height (1.75)
+- Comfortable font size (18px base)
+- Good measure (48rem max-width)
+
+**Focus States:**
+- Default outline: outline-ring/50
+- Visible focus indicators on all interactive elements
+
+---
+
+## 🎯 Design Philosophy
+
+### Principles
+
+1. **Typography is Supreme**
+   - No images, text carries everything
+   - Refined type scale and spacing
+   - Special treatments (drop caps, pull quotes)
+
+2. **Elegant Simplicity**
+   - Clean borders over shadows
+   - Subtle color palette
+   - Generous whitespace
+
+3. **Editorial Quality**
+   - Magazine-inspired layouts
+   - Professional typography
+   - Sophisticated reading experience
+
+4. **Visual Variety**
+   - 4 card variants prevent monotony
+   - Ornamental accents add personality
+   - Varied layouts maintain interest
+
+5. **Purposeful Animation**
+   - Enhances without distracting
+   - Smooth, refined motion
+   - Staggered entrances create rhythm
+
+### Inspiration
+
+- Literary magazines
+- Premium editorial websites
+- Classic book design
+- Minimalist modernism
+
+---
+
+## 📊 Component Checklist
+
+**Implemented Components:**
+- [x] Header with sticky navigation
+- [x] Hero section with ornamental design
+- [x] Blog card (4 variants with rotation)
+- [x] Blog post view with drop caps and pull quotes
+- [x] About page with feature grid
+- [x] Decorative dividers and ornaments
+- [x] Responsive grid layouts
+- [x] Motion animations throughout
+- [x] State management for navigation
+
+**UI Components Used:**
+- [x] Button (from shadcn/ui)
+- [x] Badge (from shadcn/ui)
+
+---
+
+## 🎨 Quick Reference
+
+### Most Important Measurements
+
+- Base font: **18px**
+- Line height (body): **1.75**
+- Max article width: **48rem**
+- Max grid width: **72rem**
+- Card grid gap: **2rem**
+- Animation duration: **300ms**
+
+### Most Important Colors
+
+- Text: **#1a1a1a**
+- Background: **#fefefe**
+- Muted text: **#737373**
+- Border: **rgba(0, 0, 0, 0.08)**
+
+### Most Important Animations
+
+```javascript
+// Standard fade-in
+initial={{ opacity: 0, y: 20 }}
+animate={{ opacity: 1, y: 0 }}
+transition={{ duration: 0.4 }}
+
+// Staggered (add delay)
+delay: index * 0.05
+```
+
+---
+
+## 📄 License & Attribution
+
+This design specification describes a personal blog template with emphasis on typography and editorial design. Implementation details are provided for educational purposes.
+
+**Created:** 2025
+**Version:** 1.0
+**Design System:** Typography-First Editorial
+
+---
+
+*End of Design Specification Document*
+
+

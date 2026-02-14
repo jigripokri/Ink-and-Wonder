@@ -1,0 +1,1312 @@
+# Write View Design Specification
+**Version 1.0** | World-Class Writing Experience for Personal Blogging
+
+---
+
+## 🎯 Design Philosophy
+
+### Core Principles
+
+1. **Words Come First**
+   - Writing experience is 1000x better than typical editors
+   - Large, readable text (22px/1.375rem) for older adult users
+   - Distraction-free interface that disappears when not needed
+   - Typography that makes typing a joy
+
+2. **AI as Assistant, Not Hero**
+   - AI tools live in supportive sidebar, not center stage
+   - Workflow prioritizes raw writing → AI enhancement → publishing
+   - Functions are helpful but never dominant
+   - Manual save (Cmd+S) more prominent than AI features
+
+3. **Elegant Minimalism**
+   - Clean, spacious interface
+   - Generous whitespace
+   - Subtle animations that enhance without distracting
+   - Focus mode for pure writing immersion
+
+4. **Thoughtful User Experience**
+   - Auto-save functionality (peace of mind)
+   - Auto-focus on content area (start writing immediately)
+   - Keyboard shortcuts for power users
+   - Real-time statistics without overwhelm
+
+---
+
+## 🎨 Visual Design System
+
+### Color Palette
+
+```css
+/* Inherited from main blog design */
+--background: #fefefe (soft, warm white)
+--foreground: #1a1a1a (deep charcoal text)
+--muted-foreground: #737373 (secondary text)
+--border: rgba(0, 0, 0, 0.08) (ultra-subtle borders)
+--card: #ffffff (sidebar background)
+--accent: #e5e5e5 (hover states)
+```
+
+**Usage in Write View:**
+- Background dominates for distraction-free writing
+- Borders are minimal and barely visible
+- Text maintains high contrast for readability
+- Muted colors for secondary UI elements
+
+### Typography Specifications
+
+**Title Input:**
+```css
+font-size: 3rem (48px) — 3.5rem (56px in focus mode)
+line-height: 1.1
+tracking: -0.02em (tight)
+font-weight: 400 (normal, not bold)
+placeholder-opacity: 40%
+```
+
+**Content Textarea:**
+```css
+font-family: Georgia, serif (editorial quality)
+font-size: 1.375rem (22px) — 1.5rem (24px in focus mode)
+line-height: 1.8 (generous for easy reading)
+letter-spacing: 0.01em (subtle refinement)
+font-weight: 400
+placeholder-opacity: 30%
+```
+
+**UI Elements (Top Bar, Sidebar):**
+```css
+font-size: 1rem (18px base from globals)
+font-weight: 500 (medium for labels/buttons)
+line-height: 1.5
+```
+
+**Metadata Text:**
+```css
+font-size: 0.75rem (12px for small labels)
+opacity: 60% for subtle presence
+```
+
+### Spacing & Layout
+
+**Container Structure:**
+```
+- Container: max-w-7xl (1280px)
+- Padding: px-6 (horizontal), py-12 (vertical)
+- Writing area: max-w-3xl (768px) when AI closed, max-w-4xl (1024px) when centered
+- AI Sidebar: w-80 (320px fixed width)
+- Gap between editor and sidebar: 2rem (32px)
+```
+
+**Internal Spacing:**
+```
+- Title to divider: mb-8 (2rem)
+- Divider to content: mb-12 (3rem)
+- Top bar padding: py-6, px-6
+- Sidebar internal padding: p-6
+- Button gaps: gap-2 (0.5rem) or gap-3 (0.75rem)
+```
+
+**Writing Area:**
+```
+- Min height: 600px (ensures ample writing space)
+- Bottom gradient: h-24 (fade-out indicator)
+- No max-height (infinite scroll)
+```
+
+### Borders & Radius
+
+**Border Treatment:**
+- Top bar: border-b (bottom only, subtle separation)
+- AI sidebar: border + rounded-lg (0.5rem radius)
+- Tool buttons in sidebar: border with rounded-lg
+- Divider after title: h-px (1px horizontal line)
+
+**No Border Radius on:**
+- Input fields (seamless integration)
+- Textarea (editorial cleanliness)
+
+---
+
+## 🧩 Component Architecture
+
+### 1. Top Bar (Collapsible)
+
+**Structure:**
+```
+TopBar (sticky, top-0, z-50, backdrop-blur)
+├── Left Section
+│   ├── Status Text: "Preserve Your Words"
+│   └── Metadata Row
+│       ├── Word Count: "234 words"
+│       ├── Read Time: "· 2 min read" (if > 0)
+│       └── Saved Indicator: "✓ Saved 2 mins ago"
+└── Right Section
+    ├── Focus Mode Button (ghost variant)
+    ├── AI Assistant Button (ghost variant)
+    ├── Divider (vertical line)
+    ├── Clear Button (ghost variant)
+    └── Publish Button (primary variant)
+```
+
+**Visibility:**
+- Shown: Normal editing mode
+- Hidden: Focus mode (exits screen via y: -100 animation)
+
+**Styling:**
+```css
+background: background/95 with backdrop-blur-sm
+border-bottom: 1px solid border
+padding: py-6 px-6
+position: sticky (follows scroll)
+z-index: 50 (above content)
+```
+
+**Buttons:**
+- Ghost variant: Subtle, low-contrast
+- Primary (Publish): Darker, more prominent
+- Icon + text: gap-2, w-4 h-4 icons
+- Hover: Background change (accent)
+
+**Metadata Display:**
+- Real-time word count updates
+- Reading time calculation: 200 words/minute
+- Auto-save timestamp with relative time formatting:
+  - "just now" (< 1 min)
+  - "2 mins ago" (< 60 mins)
+  - "3:45 PM" (> 60 mins)
+
+### 2. Inspirational Welcome State
+
+**Shown When:**
+- Both title and content are empty
+- User first enters write view
+
+**Structure:**
+```
+WelcomeState (centered, mb-16, pt-8)
+├── Ornament: ❦ (3xl, muted/40)
+├── Heading: "Share your thoughts, reflections, memories, or wisdom."
+│   (4xl, tracking-tight, mb-4)
+└── Subheading: "Just write freely — AI handles the rest."
+    (2xl, muted-foreground, leading-relaxed)
+```
+
+**Animation:**
+```javascript
+initial={{ opacity: 0 }}
+animate={{ opacity: 1 }}
+transition={{ duration: 0.5 }}
+```
+
+**Purpose:**
+- Reduce blank-page anxiety
+- Set encouraging, gentle tone
+- Explain AI relationship clearly
+
+### 3. Title Input
+
+**Technical Specs:**
+```tsx
+<input
+  type="text"
+  value={title}
+  onChange={(e) => setTitle(e.target.value)}
+  placeholder="Give your thoughts a title..."
+  className="w-full bg-transparent border-none outline-none"
+  style={{
+    fontSize: focusMode ? '3.5rem' : '3rem',
+    lineHeight: '1.1',
+    padding: 0
+  }}
+/>
+```
+
+**Behavior:**
+- No border or outline (seamless)
+- Transparent background (blends with page)
+- Grows with focus mode (3rem → 3.5rem)
+- Placeholder disappears on focus
+
+**Visual States:**
+- Empty: Placeholder visible at 40% opacity
+- Typing: Full opacity text
+- Focus mode: Larger text (3.5rem)
+
+### 4. Title Divider
+
+**Shown When:** Title has content
+
+**Implementation:**
+```tsx
+{title && (
+  <motion.div 
+    initial={{ scaleX: 0 }}
+    animate={{ scaleX: 1 }}
+    className="h-px bg-border mb-12 origin-left"
+  />
+)}
+```
+
+**Animation:**
+- Grows from left to right (origin-left)
+- ScaleX: 0 → 1
+- Creates satisfying visual separation
+
+### 5. Content Textarea (The Star)
+
+**Technical Implementation:**
+```tsx
+<textarea
+  ref={contentRef}
+  value={content}
+  onChange={(e) => setContent(e.target.value)}
+  placeholder="What's on your mind? A memory from yesterday..."
+  className="w-full bg-transparent border-none outline-none resize-none min-h-[600px]"
+  style={{
+    fontSize: focusMode ? '1.5rem' : '1.375rem',
+    lineHeight: '1.8',
+    fontFamily: 'Georgia, serif'
+  }}
+/>
+```
+
+**Placeholder Text:**
+```
+"What's on your mind? A memory from yesterday, a lesson learned over the years, 
+words of wisdom for future generations, or just everyday thoughts... Write however 
+feels natural to you. The AI assistant will help polish and structure everything."
+```
+- Long, detailed, encouraging
+- Sets expectation: raw → AI polish → publish
+- Emphasizes natural voice
+
+**Key Features:**
+
+1. **Auto-Focus:**
+   - Focuses automatically 500ms after page load
+   - Allows user to start typing immediately
+   - Non-intrusive delay prevents jarring experience
+
+2. **Seamless Design:**
+   - No visible border or background
+   - Feels like writing on paper
+   - Resize handle hidden (resize-none)
+   - Minimum 600px height ensures space
+
+3. **Typography:**
+   - Georgia serif for editorial quality
+   - 22px (1.375rem) for easy reading
+   - 1.8 line-height for comfortable spacing
+   - Grows to 24px in focus mode
+
+4. **Bottom Gradient:**
+   - 96px tall gradient (h-24)
+   - Fades from transparent to background
+   - Indicates infinite scroll possibility
+   - Pointer-events-none (doesn't block typing)
+
+### 6. AI Assistant Sidebar
+
+**Visibility:**
+- Triggered by: "AI Assistant" button in top bar
+- Hidden by default (showAI state = false)
+- Slides in from right with spring animation
+- Only visible when NOT in focus mode
+
+**Structure:**
+```
+Sidebar (w-80, sticky, top-32)
+├── Card Container (border, rounded-lg, p-6, bg-card)
+│   ├── Header
+│   │   ├── Sparkles Icon
+│   │   └── "AI Writing Assistant"
+│   ├── Description: "Transform your raw thoughts into polished prose"
+│   ├── Primary Action
+│   │   └── Transform Button (full width, h-12, primary variant)
+│   ├── Divider: "Or Refine Specific Parts"
+│   ├── Specific Tools (space-y-3)
+│   │   ├── Make It Shorter (Scissors icon)
+│   │   ├── Tell Me More (FileText icon)
+│   │   └── Fix My Grammar (Check icon)
+│   └── Info Panel
+│       ├── Tips Section (💡)
+│       └── Keyboard Shortcuts Reference
+```
+
+**Animation:**
+```javascript
+initial={{ x: 300, opacity: 0 }}
+animate={{ x: 0, opacity: 1 }}
+exit={{ x: 300, opacity: 0 }}
+transition={{ type: "spring", damping: 25 }}
+```
+
+**Primary Transform Button:**
+```css
+width: 100%
+height: 48px (h-12)
+background: primary (dark)
+color: primary-foreground (white)
+border-radius: 0.5rem
+gap: 0.5rem (icon + text)
+
+States:
+- Disabled: opacity-50, cursor-not-allowed (when no content)
+- Loading: Sparkles icon animates with pulse
+- Hover: Slight background darken
+```
+
+**Tool Buttons:**
+```css
+Structure:
+- Full width, text-left alignment
+- padding: 1rem (p-4)
+- border: 1px solid border
+- border-radius: 0.5rem
+- hover: background-accent
+
+Content:
+- Icon (w-5 h-5, muted-foreground → foreground on hover)
+- Title (primary text)
+- Description (text-sm, muted-foreground)
+```
+
+**Info Panel:**
+```css
+background: muted/30 (very subtle)
+border-radius: 0.5rem
+padding: 1rem (p-4)
+
+Content:
+- Icon: 💡 (text-base size)
+- Tips text (text-xs, muted-foreground)
+- Keyboard shortcuts (text-xs, opacity-60)
+```
+
+**Sticky Positioning:**
+- top: 8rem (top-32) — stays visible while scrolling
+- Follows user down page
+- Stops at bottom of content
+
+### 7. Focus Mode
+
+**What It Does:**
+- Removes ALL UI except title and content
+- Enlarges text (title: 3.5rem, content: 1.5rem)
+- Shows "Press Esc to exit" hint at bottom
+- Overlays fixed background (z-40)
+
+**Visual Changes:**
+```
+Normal Mode → Focus Mode:
+- Top bar: visible → hidden (y: -100, opacity: 0)
+- AI sidebar: visible/hidden → hidden (forced)
+- Title: 3rem → 3.5rem
+- Content: 1.375rem → 1.5rem
+- Background overlay: none → fixed full-screen
+```
+
+**Background Overlay:**
+```tsx
+{focusMode && (
+  <div className="fixed inset-0 bg-background z-40 pointer-events-none" />
+)}
+```
+- Covers everything except writing area
+- Pointer-events-none: Doesn't block interaction
+- z-40: Below content (z-50) but above page
+
+**Exit Hint:**
+```tsx
+<motion.div
+  initial={{ opacity: 0 }}
+  animate={{ opacity: 1 }}
+  className="fixed bottom-8 left-1/2 -translate-x-1/2 
+             text-muted-foreground/60 text-sm"
+>
+  Press Esc to exit focus mode
+</motion.div>
+```
+- Fixed position at bottom center
+- Low opacity (60%)
+- Small text (text-sm)
+- Subtle reminder
+
+---
+
+## 🎭 Interaction Patterns
+
+### Auto-Save System
+
+**Trigger:**
+- Fires 2 seconds after user stops typing
+- Debounced to prevent excessive saves
+- Only saves if title OR content exists
+
+**Implementation:**
+```javascript
+useEffect(() => {
+  if (!title && !content) return;
+  
+  const timer = setTimeout(() => {
+    setLastSaved(new Date());
+    localStorage.setItem('draft', JSON.stringify({ title, content }));
+  }, 2000);
+
+  return () => clearTimeout(timer);
+}, [title, content]);
+```
+
+**Visual Feedback:**
+- Top bar shows: "✓ Saved [time]"
+- Check icon (w-3 h-3)
+- Relative time updates in real-time
+- Manual Cmd+S shows toast: "Saved"
+
+### Draft Persistence
+
+**On Mount:**
+```javascript
+useEffect(() => {
+  const saved = localStorage.getItem('draft');
+  if (saved) {
+    const draft = JSON.parse(saved);
+    setTitle(draft.title || "");
+    setContent(draft.content || "");
+  }
+}, []);
+```
+
+**On Publish:**
+```javascript
+// After successful publish
+setTimeout(() => {
+  setTitle("");
+  setContent("");
+  localStorage.removeItem('draft');
+}, 500);
+```
+
+### Real-Time Statistics
+
+**Word Count:**
+```javascript
+const words = content.trim().split(/\s+/).filter(word => word.length > 0);
+setWordCount(words.length);
+```
+
+**Character Count:**
+```javascript
+setCharCount(content.length);
+```
+
+**Reading Time:**
+```javascript
+// 200 words per minute average
+setReadTime(Math.ceil(words.length / 200));
+```
+
+**Typing Indicator:**
+```javascript
+// Shows user is actively typing
+setIsTyping(true);
+clearTimeout(typingTimerRef.current);
+typingTimerRef.current = setTimeout(() => {
+  setIsTyping(false);
+}, 1000);
+```
+
+### Keyboard Shortcuts
+
+**Escape:**
+- Exits focus mode (if active)
+- Single press only
+
+**Cmd/Ctrl + Shift + F:**
+- Toggles focus mode on/off
+- Prevents default browser behavior
+
+**Cmd/Ctrl + Shift + A:**
+- Opens/closes AI sidebar
+- Prevents default browser behavior
+
+**Cmd/Ctrl + S:**
+- Manual save trigger
+- Shows success toast
+- Prevents browser save dialog
+
+**Implementation:**
+```javascript
+useEffect(() => {
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Escape' && focusMode) {
+      setFocusMode(false);
+    }
+    
+    if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'f') {
+      e.preventDefault();
+      setFocusMode(!focusMode);
+    }
+    
+    // Additional shortcuts...
+  };
+
+  window.addEventListener('keydown', handleKeyDown);
+  return () => window.removeEventListener('keydown', handleKeyDown);
+}, [focusMode, showAI]);
+```
+
+### AI Transformation Flow
+
+**User Actions:**
+1. Writes content in textarea
+2. Opens AI sidebar (if not open)
+3. Clicks transformation button
+4. Sees loading state
+5. Receives transformed content (simulated)
+
+**Visual Feedback:**
+```javascript
+// Loading state
+toast.loading(`Applying ${type}...`);
+setIsTransforming(true);
+
+// Button shows loading
+<Button disabled={isTransforming}>
+  <Sparkles className={isTransforming ? 'animate-pulse' : ''} />
+  {isTransforming ? 'Transforming...' : 'Transform My Words'}
+</Button>
+
+// Success state
+setTimeout(() => {
+  setIsTransforming(false);
+  toast.dismiss();
+  toast.success(`${type} transformation complete!`);
+}, 1500);
+```
+
+**Disabled States:**
+- All AI buttons disabled when content is empty
+- Visual: opacity-50, cursor-not-allowed
+- Clicking shows toast: "Please write something first"
+
+### Publishing Flow
+
+**Validation:**
+```javascript
+if (!title.trim()) {
+  toast.error("Please add a title before publishing");
+  return;
+}
+if (!content.trim()) {
+  toast.error("Please write some content before publishing");
+  return;
+}
+```
+
+**Success Flow:**
+1. Loading toast: "Publishing your words..."
+2. 1-second delay (simulated API call)
+3. Success toast: "Published "Title" — 234 words preserved"
+4. 500ms delay
+5. Clear form and localStorage
+6. Ready for next post
+
+### Clear Functionality
+
+**Behavior:**
+- Only active if title OR content exists
+- Shows confirmation dialog: "Are you sure you want to clear your writing?"
+- On confirm: Clears all fields, removes draft, shows toast
+- On cancel: No action
+
+---
+
+## 📐 Layout Specifications
+
+### Responsive Behavior
+
+**Desktop (> 1024px):**
+- Editor: max-w-3xl (with AI sidebar) or max-w-4xl (centered without)
+- Sidebar: w-80 (fixed, sticky)
+- Container: max-w-7xl
+- Full keyboard shortcut support
+
+**Tablet (768px - 1024px):**
+- Editor: max-w-3xl (may stack sidebar below on smaller tablets)
+- Sidebar: w-80 or full-width below
+- Same typography sizes
+
+**Mobile (< 768px):**
+- Single column layout
+- Sidebar becomes full-width drawer or modal
+- Title: 2.5rem instead of 3rem
+- Content: 1.25rem instead of 1.375rem
+- Touch-optimized buttons (larger tap targets)
+
+### Dynamic Layout Shift
+
+**Editor Width:**
+```tsx
+<motion.div 
+  layout
+  className={`flex-1 transition-all duration-300 ${
+    showAI ? 'max-w-3xl' : 'max-w-4xl mx-auto'
+  }`}
+>
+```
+
+**Behavior:**
+- Sidebar closed: Editor centered at max-w-4xl
+- Sidebar open: Editor shifts left to max-w-3xl
+- Smooth 300ms transition
+- Layout animation via Motion
+
+### Z-Index Stack
+
+```
+z-50: Top bar (sticky)
+z-40: Focus mode overlay
+z-10: Content (in some card variants)
+z-0: Default page content
+```
+
+---
+
+## 🎬 Animation Specifications
+
+### Page Entrance
+
+**Initial Load:**
+```javascript
+<motion.div 
+  initial={{ opacity: 0 }}
+  animate={{ opacity: 1 }}
+  transition={{ duration: 0.5 }}
+  className="min-h-screen bg-background"
+>
+```
+
+### Top Bar Animations
+
+**Show/Hide:**
+```javascript
+{!focusMode && (
+  <motion.div 
+    initial={{ y: -100, opacity: 0 }}
+    animate={{ y: 0, opacity: 1 }}
+    exit={{ y: -100, opacity: 0 }}
+    className="border-b border-border sticky top-0 z-50"
+  />
+)}
+```
+
+### Title Divider
+
+**Grow Animation:**
+```javascript
+<motion.div 
+  initial={{ scaleX: 0 }}
+  animate={{ scaleX: 1 }}
+  className="h-px bg-border mb-12 origin-left"
+/>
+```
+
+### AI Sidebar
+
+**Slide-In:**
+```javascript
+<motion.div
+  initial={{ x: 300, opacity: 0 }}
+  animate={{ x: 0, opacity: 1 }}
+  exit={{ x: 300, opacity: 0 }}
+  transition={{ type: "spring", damping: 25 }}
+  className="w-80 sticky top-32"
+/>
+```
+
+### Welcome State
+
+**Fade In:**
+```javascript
+<motion.div
+  initial={{ opacity: 0 }}
+  animate={{ opacity: 1 }}
+  className="text-center mb-16 pt-8"
+/>
+```
+
+### Focus Mode Hint
+
+**Subtle Entrance:**
+```javascript
+<motion.div
+  initial={{ opacity: 0 }}
+  animate={{ opacity: 1 }}
+  className="fixed bottom-8 left-1/2 -translate-x-1/2"
+/>
+```
+
+### Timing Guidelines
+
+- **Fast:** 200ms (micro-interactions)
+- **Standard:** 300ms (most UI transitions)
+- **Slow:** 400-600ms (page-level changes)
+- **Spring:** damping: 25 (sidebar, drawers)
+
+---
+
+## 🔧 Technical Implementation
+
+### State Management
+
+```typescript
+// Core state
+const [title, setTitle] = useState("");
+const [content, setContent] = useState("");
+const [showAI, setShowAI] = useState(false);
+const [focusMode, setFocusMode] = useState(false);
+
+// Statistics
+const [wordCount, setWordCount] = useState(0);
+const [charCount, setCharCount] = useState(0);
+const [readTime, setReadTime] = useState(0);
+
+// Auto-save
+const [lastSaved, setLastSaved] = useState<Date | null>(null);
+const [isTransforming, setIsTransforming] = useState(false);
+const [isTyping, setIsTyping] = useState(false);
+
+// Refs
+const contentRef = useRef<HTMLTextAreaElement>(null);
+const typingTimerRef = useRef<NodeJS.Timeout>();
+```
+
+### Key Functions
+
+**Format Time:**
+```typescript
+function formatTime(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  
+  if (diffMins < 1) return 'just now';
+  if (diffMins === 1) return '1 min ago';
+  if (diffMins < 60) return `${diffMins} mins ago`;
+  
+  return date.toLocaleTimeString('en-US', { 
+    hour: 'numeric', 
+    minute: '2-digit',
+    hour12: true 
+  });
+}
+```
+
+**Handle Transform:**
+```typescript
+const handleTransform = (type: string) => {
+  if (!content.trim()) {
+    toast.error("Please write something first");
+    return;
+  }
+  
+  setIsTransforming(true);
+  toast.loading(`Applying ${type}...`);
+  
+  // Simulate AI transformation
+  setTimeout(() => {
+    setIsTransforming(false);
+    toast.dismiss();
+    toast.success(`${type} transformation complete!`);
+  }, 1500);
+};
+```
+
+**Handle Publish:**
+```typescript
+const handlePublish = () => {
+  if (!title.trim()) {
+    toast.error("Please add a title before publishing");
+    return;
+  }
+  if (!content.trim()) {
+    toast.error("Please write some content before publishing");
+    return;
+  }
+  
+  toast.loading("Publishing your words...");
+  
+  setTimeout(() => {
+    toast.dismiss();
+    toast.success(`Published "${title}" — ${wordCount} words preserved`);
+    
+    setTimeout(() => {
+      setTitle("");
+      setContent("");
+      localStorage.removeItem('draft');
+    }, 500);
+  }, 1000);
+};
+```
+
+**Handle Clear:**
+```typescript
+const handleClear = () => {
+  if (title || content) {
+    if (confirm("Are you sure you want to clear your writing?")) {
+      setTitle("");
+      setContent("");
+      localStorage.removeItem('draft');
+      toast.success("Cleared");
+    }
+  }
+};
+```
+
+### Required Libraries
+
+```json
+{
+  "motion/react": "Animation library (formerly Framer Motion)",
+  "lucide-react": "Icons (Sparkles, Scissors, FileText, Check, Save, Eye, EyeOff, Wand2)",
+  "sonner@2.0.3": "Toast notifications",
+  "./ui/button": "Shadcn button component"
+}
+```
+
+### Icon Usage
+
+```typescript
+import { 
+  Sparkles,  // AI features, transformation
+  Scissors,  // Make shorter
+  FileText,  // Expand content
+  Check,     // Grammar check, saved indicator
+  Save,      // Publish button
+  Eye,       // Exit focus mode
+  EyeOff,    // Enter focus mode
+  Wand2      // AI Assistant button
+} from "lucide-react";
+```
+
+All icons: w-4 h-4 (16px) or w-5 h-5 (20px) depending on context
+
+---
+
+## 📊 User Experience Flows
+
+### First-Time User Journey
+
+1. **Enters Write View**
+   - Sees welcome message with ornament
+   - Encouraging headline appears
+   - Cursor auto-focuses in content area after 500ms
+
+2. **Starts Writing**
+   - Types naturally (no structure required)
+   - Welcome message fades out
+   - Word count begins updating in real-time
+   - Auto-save starts working after 2-second pause
+
+3. **Explores AI Tools** (Optional)
+   - Clicks "AI Assistant" button
+   - Sidebar slides in from right
+   - Sees transformation options
+   - Can apply or continue writing
+
+4. **Uses Focus Mode** (Optional)
+   - Clicks "Focus Mode" or uses Cmd+Shift+F
+   - UI fades away
+   - Text enlarges for immersive writing
+   - Presses Esc when ready to return
+
+5. **Publishes**
+   - Clicks "Publish" button
+   - Sees loading state
+   - Gets success confirmation
+   - Form clears for next post
+
+### Experienced User Journey
+
+1. **Returns to Write View**
+   - Previous draft automatically loads
+   - Cursor focuses immediately
+   - Continues where left off
+
+2. **Uses Keyboard Shortcuts**
+   - Cmd+Shift+F for focus mode
+   - Cmd+Shift+A for AI sidebar
+   - Cmd+S for manual save
+   - Faster, more efficient workflow
+
+3. **Rapid Writing Workflow**
+   - Writes freely without structure
+   - Uses AI transform when ready
+   - Publishes quickly
+   - Clears for next post
+
+### Error Recovery
+
+**Lost Content:**
+- Auto-save every 2 seconds prevents loss
+- Draft persists across sessions
+- Manual save option (Cmd+S)
+
+**Accidental Clear:**
+- Confirmation dialog prevents accidents
+- Cannot recover after confirmation (intentional)
+
+**Validation Errors:**
+- Clear toast messages
+- Explains what's missing
+- Non-blocking (doesn't interrupt flow)
+
+---
+
+## ♿ Accessibility Considerations
+
+### Semantic HTML
+
+```html
+<input type="text" ... />       <!-- Title -->
+<textarea ... />                 <!-- Content -->
+<button>Publish</button>         <!-- Actions -->
+```
+
+### Keyboard Navigation
+
+- All interactive elements keyboard-accessible
+- Logical tab order: Title → Content → Buttons
+- Escape key exits focus mode
+- Keyboard shortcuts for power users
+
+### Focus Management
+
+- Auto-focus on content area (helps user start)
+- Visible focus indicators (outline-ring/50)
+- Focus mode for users who need distraction-free
+
+### Large Text
+
+- Base content: 22px (1.375rem)
+- Title: 48px (3rem)
+- Larger than typical for older adult users
+- High line-height (1.8) for readability
+
+### Color Contrast
+
+- Foreground (#1a1a1a) on Background (#fefefe)
+- Passes WCAG AAA for normal text
+- Muted text (#737373) still passes AA
+
+### Screen Reader Support
+
+- Proper button labels
+- Status updates (saved indicator)
+- Error messages via toast
+- Semantic structure
+
+---
+
+## 🎯 Design Goals Achieved
+
+### Primary Goal: 1000x Better Writing Experience
+
+✅ **Large, Readable Text**
+- 22px content (vs typical 16px)
+- 1.8 line-height (vs typical 1.5)
+- Georgia serif for editorial quality
+
+✅ **Distraction-Free Interface**
+- Minimal UI that disappears when not needed
+- Focus mode removes ALL distractions
+- Clean, spacious layout
+
+✅ **Makes Typing a Joy**
+- Seamless textarea (no borders/background)
+- Auto-focus so user can start immediately
+- Smooth animations enhance experience
+- No interruptions or distractions
+
+### Secondary Goal: AI as Support, Not Hero
+
+✅ **Supportive Sidebar**
+- Hidden by default
+- Slides in when needed
+- Doesn't dominate interface
+
+✅ **Manual Actions Prominent**
+- Publish button always visible
+- Manual save via Cmd+S
+- Clear button for control
+
+✅ **AI in Workflow, Not Center**
+- Write freely → Transform → Publish
+- Optional, not required
+- Natural progression
+
+### Tertiary Goal: Older Adult Friendly
+
+✅ **Large Text Throughout**
+- Title: 48px (vs typical 24-32px)
+- Content: 22px (vs typical 16px)
+- UI: 18px base (vs typical 14-16px)
+
+✅ **Simple, Clear Interface**
+- No overwhelming options
+- Clear labels and actions
+- Confirmation dialogs prevent mistakes
+
+✅ **Peace of Mind Features**
+- Auto-save every 2 seconds
+- Draft persistence across sessions
+- Clear saved indicator
+
+---
+
+## 📱 Responsive Design Specifications
+
+### Mobile (<768px)
+
+**Layout Changes:**
+- Single column (editor full-width)
+- AI sidebar becomes modal or drawer
+- Top bar buttons may wrap or menu
+
+**Typography Changes:**
+```css
+Title: 2.5rem (40px) instead of 3rem
+Content: 1.25rem (20px) instead of 1.375rem
+UI text: Same (18px base)
+```
+
+**Touch Optimizations:**
+- Larger tap targets (min 44px)
+- More spacing between buttons
+- Easier thumb reach for common actions
+
+### Tablet (768px-1024px)
+
+**Layout:**
+- Editor: max-w-3xl
+- Sidebar: May stack below on smaller tablets
+- Full desktop typography
+
+### Desktop (>1024px)
+
+**Optimal Experience:**
+- Editor + sidebar side-by-side
+- All keyboard shortcuts available
+- Largest text sizes
+- Most spacious layout
+
+---
+
+## 🎨 Special Features
+
+### 1. Auto-Focus on Content
+
+**Purpose:** Remove friction from starting to write
+
+**Implementation:**
+```javascript
+setTimeout(() => {
+  if (contentRef.current) {
+    contentRef.current.focus();
+  }
+}, 500);
+```
+
+**Delay:** 500ms (allows page to settle, prevents jarring)
+
+### 2. Bottom Gradient
+
+**Purpose:** Visual indicator of infinite scroll space
+
+**Implementation:**
+```tsx
+<div className="absolute bottom-0 left-0 right-0 h-24 
+                bg-gradient-to-t from-background to-transparent 
+                pointer-events-none" 
+/>
+```
+
+**Effect:** Subtle fade from background color to transparent
+
+### 3. Dynamic Editor Width
+
+**Purpose:** Optimize reading width based on sidebar visibility
+
+**Implementation:**
+```tsx
+<motion.div 
+  layout
+  className={`flex-1 transition-all duration-300 ${
+    showAI ? 'max-w-3xl' : 'max-w-4xl mx-auto'
+  }`}
+>
+```
+
+**Result:** Editor centers when sidebar closed, shifts when open
+
+### 4. Typing Indicator
+
+**Purpose:** Show active typing state for future features
+
+**Implementation:**
+```javascript
+// Set typing to true on change
+setIsTyping(true);
+
+// Clear after 1 second of no typing
+clearTimeout(typingTimerRef.current);
+typingTimerRef.current = setTimeout(() => {
+  setIsTyping(false);
+}, 1000);
+```
+
+**Future Use:** Could drive auto-save indicator, collaboration features
+
+### 5. Relative Time Formatting
+
+**Purpose:** Human-friendly save timestamps
+
+**Formats:**
+- "just now" (< 1 minute)
+- "2 mins ago" (1-59 minutes)
+- "3:45 PM" (60+ minutes)
+
+**Updates:** Real-time via Date object in state
+
+---
+
+## 🔮 Future Enhancements
+
+### Potential Additions
+
+1. **Rich Text Formatting**
+   - Bold, italic, links
+   - Keyboard shortcuts (Cmd+B, Cmd+I)
+   - Maintained as plain text with Markdown
+
+2. **Version History**
+   - Multiple auto-save snapshots
+   - Revert to previous versions
+   - Compare changes
+
+3. **Word Processor Features**
+   - Find & replace
+   - Spell check
+   - Grammar suggestions (separate from AI)
+
+4. **Collaboration**
+   - Real-time co-editing
+   - Comments and suggestions
+   - Typing indicators for other users
+
+5. **Advanced AI Features**
+   - Tone adjustment (formal/casual)
+   - Length targets (make exactly 500 words)
+   - Style matching (write like previous posts)
+
+6. **Export Options**
+   - Download as Markdown
+   - Export to PDF
+   - Copy formatted HTML
+
+### Not Recommended
+
+❌ **Image uploads** — Conflicts with text-only philosophy
+❌ **Complex formatting** — Increases cognitive load
+❌ **Multiple fonts** — Reduces focus on words
+❌ **Toolbars** — Adds visual clutter
+
+---
+
+## 📄 Quick Reference
+
+### Most Important Measurements
+
+- **Content text:** 22px (1.375rem) | 24px focus mode
+- **Title text:** 48px (3rem) | 56px focus mode
+- **Line height:** 1.8 (content) | 1.1 (title)
+- **Editor max-width:** 768px (with AI) | 1024px (centered)
+- **Sidebar width:** 320px (w-80)
+- **Min content height:** 600px
+- **Auto-save delay:** 2 seconds
+- **Animation duration:** 300ms standard
+
+### Most Important Colors
+
+- **Text:** #1a1a1a
+- **Background:** #fefefe
+- **Muted:** #737373
+- **Border:** rgba(0, 0, 0, 0.08)
+
+### Most Important Interactions
+
+- **Cmd+Shift+F:** Focus mode
+- **Cmd+Shift+A:** AI sidebar
+- **Cmd+S:** Manual save
+- **Escape:** Exit focus mode
+- **Auto-save:** Every 2 seconds after typing stops
+
+### Most Important States
+
+- **showAI:** Sidebar visibility
+- **focusMode:** Distraction-free mode
+- **title:** Title input value
+- **content:** Content textarea value
+- **wordCount:** Real-time word count
+- **lastSaved:** Auto-save timestamp
+
+---
+
+## 📝 Content Guidelines
+
+### Placeholder Text
+
+**Title:**
+```
+"Give your thoughts a title..."
+```
+- Short, encouraging
+- Uses "your thoughts" for ownership
+
+**Content:**
+```
+"What's on your mind? A memory from yesterday, a lesson learned over the years, 
+words of wisdom for future generations, or just everyday thoughts... Write however 
+feels natural to you. The AI assistant will help polish and structure everything."
+```
+- Long, detailed, inviting
+- Multiple example use cases
+- Emphasizes natural writing
+- Explains AI role clearly
+
+### Button Labels
+
+- **Publish** (not "Post" or "Submit") — Feels more meaningful
+- **Focus Mode** — Clear, descriptive
+- **AI Assistant** — Not "AI" alone, emphasizes supportive role
+- **Clear** — Simple, direct
+- **Transform My Words** — Personal, empowering
+
+### Status Messages
+
+- **"Preserve Your Words"** — Emotional, meaningful
+- **"234 words"** — Clear count
+- **"✓ Saved just now"** — Reassuring
+
+---
+
+*End of Write View Design Specification*
+
+---
+
+**Version:** 1.0  
+**Last Updated:** October 31, 2025  
+**Design System:** Typography-First Personal Blogging  
+**Component:** Write View (World-Class Writing Experience)
