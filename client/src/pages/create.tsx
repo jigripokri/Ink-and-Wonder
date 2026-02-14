@@ -38,7 +38,6 @@ export default function Create() {
     const now = new Date();
     return now.toISOString().split('T')[0];
   });
-  const [showDatePicker, setShowDatePicker] = useState(false);
   
   // Auto-save state
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -496,30 +495,17 @@ export default function Create() {
         <div className="sticky top-0 z-40 bg-transparent">
           <div className="max-w-5xl mx-auto px-3 sm:px-6 py-2 sm:py-3 flex items-center justify-between">
             {/* Stats */}
-            <div className="flex items-center gap-2 text-xs text-muted-foreground whitespace-nowrap overflow-hidden">
-              {showDatePicker ? (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground whitespace-nowrap">
+              <label className="flex items-center gap-1 shrink-0 cursor-pointer hover:text-foreground transition-colors">
+                <CalendarDays className="w-3 h-3" />
                 <input
                   type="date"
                   value={postDate}
-                  onChange={(e) => {
-                    setPostDate(e.target.value);
-                    setShowDatePicker(false);
-                  }}
-                  className="text-xs bg-transparent border-b border-muted-foreground/30 focus:border-foreground outline-none"
+                  onChange={(e) => setPostDate(e.target.value)}
+                  className="text-xs bg-transparent outline-none w-[6.5rem] cursor-pointer"
                   data-testid="input-date"
-                  autoFocus
-                  onBlur={() => setShowDatePicker(false)}
                 />
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setShowDatePicker(true)}
-                  className="flex items-center gap-1 hover:text-foreground transition-colors shrink-0"
-                  data-testid="button-date-toggle"
-                >
-                  <CalendarDays className="w-3 h-3" />
-                </button>
-              )}
+              </label>
               <span>·</span>
               <span>{stats.words}w</span>
               {lastSaved && (
