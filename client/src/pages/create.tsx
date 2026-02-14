@@ -496,17 +496,8 @@ export default function Create() {
         <div className="sticky top-0 z-40 bg-transparent">
           <div className="max-w-5xl mx-auto px-3 sm:px-6 py-2 sm:py-3 flex items-center justify-between">
             {/* Stats */}
-            <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
-              <button
-                type="button"
-                onClick={() => setShowDatePicker(!showDatePicker)}
-                className="flex items-center gap-1 hover:text-foreground transition-colors"
-                data-testid="button-date-toggle"
-              >
-                <CalendarDays className="w-3 h-3" />
-                <span>{formatDateForPost(postDate)}</span>
-              </button>
-              {showDatePicker && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground whitespace-nowrap overflow-hidden">
+              {showDatePicker ? (
                 <input
                   type="date"
                   value={postDate}
@@ -514,27 +505,29 @@ export default function Create() {
                     setPostDate(e.target.value);
                     setShowDatePicker(false);
                   }}
-                  className="text-xs bg-transparent border-b border-muted-foreground/30 focus:border-foreground outline-none py-0.5"
+                  className="text-xs bg-transparent border-b border-muted-foreground/30 focus:border-foreground outline-none"
                   data-testid="input-date"
                   autoFocus
                   onBlur={() => setShowDatePicker(false)}
                 />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowDatePicker(true)}
+                  className="flex items-center gap-1 hover:text-foreground transition-colors shrink-0"
+                  data-testid="button-date-toggle"
+                >
+                  <CalendarDays className="w-3 h-3" />
+                </button>
               )}
               <span>·</span>
-              <span>{stats.words} words</span>
-              {stats.readTime > 0 && (
-                <>
-                  <span>·</span>
-                  <span>{stats.readTime} min</span>
-                </>
-              )}
+              <span>{stats.words}w</span>
               {lastSaved && (
                 <>
                   <span>·</span>
-                  <div className="flex items-center gap-1.5 text-emerald-500/70" data-testid="text-save-status">
-                    <Check className="w-3 h-3" />
-                    <span>{draftRestored ? "Draft restored" : formattedSaveTime}</span>
-                  </div>
+                  <span className="text-emerald-500/70" data-testid="text-save-status">
+                    {draftRestored ? "saved" : formattedSaveTime}
+                  </span>
                 </>
               )}
             </div>
