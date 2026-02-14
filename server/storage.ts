@@ -1,6 +1,6 @@
 import { getDb, withRetry } from "./db";
 import { blogPosts, type InsertBlogPost, type BlogPost } from "@shared/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 
 export interface IStorage {
   getAllPosts(): Promise<BlogPost[]>;
@@ -14,11 +14,11 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   async getAllPosts(): Promise<BlogPost[]> {
-    return withRetry(() => getDb().select().from(blogPosts).orderBy(desc(blogPosts.createdAt)));
+    return withRetry(() => getDb().select().from(blogPosts).orderBy(desc(sql`COALESCE(TO_DATE(${blogPosts.date}, 'Month DD, YYYY'), ${blogPosts.createdAt})`)));
   }
 
   async getPublicPosts(): Promise<BlogPost[]> {
-    return withRetry(() => getDb().select().from(blogPosts).where(eq(blogPosts.isPrivate, false)).orderBy(desc(blogPosts.createdAt)));
+    return withRetry(() => getDb().select().from(blogPosts).where(eq(blogPosts.isPrivate, false)).orderBy(desc(sql`COALESCE(TO_DATE(${blogPosts.date}, 'Month DD, YYYY'), ${blogPosts.createdAt})`)));
   }
 
   async getPostById(id: number): Promise<BlogPost | undefined> {
