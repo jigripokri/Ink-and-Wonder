@@ -11,6 +11,7 @@ Writers simply type their thoughts and hit Publish. AI automatically polishes th
 - Communication style: Simple, everyday language
 - No emojis in UI (use Lucide icons instead)
 - Typography-first editorial design with generous whitespace
+- **CRITICAL: NEVER write any script, migration, or startup code that deletes, truncates, or bulk-removes blog posts. Post data is irreplaceable. The only allowed deletion is the single-post DELETE /api/posts/:id endpoint triggered by the authenticated user.**
 
 ## Recent Changes (February 14, 2026)
 
