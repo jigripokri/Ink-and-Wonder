@@ -7,6 +7,7 @@ import Home from "@/pages/home";
 import About from "@/pages/about";
 import Create from "@/pages/create";
 import HowTo from "@/pages/how-to";
+import PostPage from "@/pages/post";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -16,6 +17,7 @@ function Router() {
       <Route path="/about" component={About} />
       <Route path="/create" component={Create} />
       <Route path="/how-to" component={HowTo} />
+      <Route path="/post/:id" component={PostPage} />
       <Route component={NotFound} />
     </Switch>
   );

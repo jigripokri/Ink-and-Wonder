@@ -94,27 +94,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const siteUrl = getBaseUrl(req);
     const ogImage = `${siteUrl}/og-image.png`;
 
-    if (!viewId) {
-      const userAgent = (req.get("user-agent") || "").toLowerCase();
-      const isCrawler = /facebookexternalhit|whatsapp|telegrambot|twitterbot|linkedinbot|slackbot|discordbot|bot|crawler|spider/i.test(userAgent);
-      if (!isCrawler) return next();
-
-      try {
-        await injectOgTags(req, res, {
-          title: "A Grandmother's Journal",
-          description: "A grandmother's reflections, memories, and little wisdoms — written down so her grandchildren can read them years from now.",
-          url: siteUrl,
-          type: "website",
-          image: ogImage,
-        });
-      } catch (error) {
-        console.error("Homepage OG injection error:", error);
-        next();
+    if (viewId) {
+      const id = parseInt(viewId as string);
+      if (!isNaN(id)) {
+        return res.redirect(301, `/post/${id}`);
       }
-      return;
+      return next();
     }
 
-    const id = parseInt(viewId as string);
+    const userAgent = (req.get("user-agent") || "").toLowerCase();
+    const isCrawler = /facebookexternalhit|whatsapp|telegrambot|twitterbot|linkedinbot|slackbot|discordbot|bot|crawler|spider/i.test(userAgent);
+    if (!isCrawler) return next();
+
+    try {
+      await injectOgTags(req, res, {
+        title: "A Grandmother's Journal",
+        description: "A grandmother's reflections, memories, and little wisdoms — written down so her grandchildren can read them years from now.",
+        url: siteUrl,
+        type: "website",
+        image: ogImage,
+      });
+    } catch (error) {
+      console.error("Homepage OG injection error:", error);
+      next();
+    }
+  });
+
+  app.get("/post/:id", async (req, res, next) => {
+    const siteUrl = getBaseUrl(req);
+    const ogImage = `${siteUrl}/og-image.png`;
+    const id = parseInt(req.params.id);
     if (isNaN(id)) return next();
 
     try {
@@ -124,6 +133,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const isAuthed = (req as any).cookies?.writer_auth === "authenticated";
       if (post.isPrivate && !isAuthed) return next();
 
+      const userAgent = (req.get("user-agent") || "").toLowerCase();
+      const isCrawler = /facebookexternalhit|whatsapp|telegrambot|twitterbot|linkedinbot|slackbot|discordbot|bot|crawler|spider/i.test(userAgent);
+      if (!isCrawler) return next();
+
       const title = escapeHtml(post.title);
       const excerpt = escapeHtml(post.excerpt);
       const category = escapeHtml(post.category);
@@ -131,7 +144,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await injectOgTags(req, res, {
         title,
         description: excerpt,
-        url: `${siteUrl}/?view=${post.id}`,
+        url: `${siteUrl}/post/${post.id}`,
         type: "article",
         image: ogImage,
         category,

@@ -103,7 +103,7 @@ export default function BlogPost({ post, onBack }: BlogPostProps) {
   const [copied, setCopied] = useState(false);
 
   const getShareUrl = () => {
-    return `${window.location.origin}/?view=${post.id}`;
+    return `${window.location.origin}/post/${post.id}`;
   };
 
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);

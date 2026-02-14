@@ -5,7 +5,6 @@ import { useLocation } from "wouter";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import BlogCard from "@/components/BlogCard";
-import BlogPost from "@/components/BlogPost";
 import SkeletonCard from "@/components/SkeletonCard";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -13,8 +12,7 @@ import { Search, X } from "lucide-react";
 import type { BlogPost as BlogPostType } from "@shared/schema";
 
 export default function Home() {
-  const [location] = useLocation();
-  const [selectedPost, setSelectedPost] = useState<BlogPostType | null>(null);
+  const [location, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -31,17 +29,14 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Check URL for post to view
+  // Backward compatibility: redirect ?view=ID to /post/ID
   useEffect(() => {
     const params = new URLSearchParams(location.split('?')[1] || '');
     const viewId = params.get('view');
-    if (viewId && posts.length > 0) {
-      const post = posts.find(p => p.id === parseInt(viewId));
-      if (post) {
-        setSelectedPost(post);
-      }
+    if (viewId) {
+      setLocation(`/post/${viewId}`, { replace: true });
     }
-  }, [location, posts]);
+  }, [location, setLocation]);
 
   // Get unique categories
   const categories = useMemo(() => {
@@ -62,22 +57,6 @@ export default function Home() {
       return matchesSearch && matchesCategory;
     });
   }, [posts, debouncedSearch, selectedCategory]);
-
-  if (selectedPost) {
-    return (
-      <>
-        <Header />
-        <BlogPost
-          post={{
-            ...selectedPost,
-            createdAt: new Date(selectedPost.createdAt),
-            updatedAt: new Date(selectedPost.updatedAt),
-          }}
-          onBack={() => setSelectedPost(null)}
-        />
-      </>
-    );
-  }
 
   const hasActiveFilters = searchQuery || selectedCategory;
   const showEmptyState = filteredPosts.length === 0 && posts.length > 0 && hasActiveFilters;
@@ -235,7 +214,7 @@ export default function Home() {
                   <BlogCard
                     post={post}
                     index={index}
-                    onClick={() => setSelectedPost(post)}
+                    onClick={() => setLocation(`/post/${post.id}`)}
                   />
                 </div>
               ))}
