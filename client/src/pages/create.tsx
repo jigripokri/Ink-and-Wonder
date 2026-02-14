@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/lib/auth";
-import { Check, Sparkles, Lock, ClipboardPaste } from "lucide-react";
+import { Check, Sparkles, Lock, ClipboardPaste, CalendarDays } from "lucide-react";
 import type { InsertBlogPost, BlogPost } from "@shared/schema";
 
 export default function Create() {
@@ -34,6 +34,11 @@ export default function Create() {
   // Core state (preserve title for backward compat but don't show in UI)
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [postDate, setPostDate] = useState(() => {
+    const now = new Date();
+    return now.toISOString().split('T')[0];
+  });
+  const [showDatePicker, setShowDatePicker] = useState(false);
   
   // Auto-save state
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -53,6 +58,14 @@ export default function Create() {
     if (editPost) {
       setContent(editPost.content);
       setTitle(editPost.title);
+      if (editPost.date) {
+        try {
+          const parsed = new Date(editPost.date);
+          if (!isNaN(parsed.getTime())) {
+            setPostDate(parsed.toISOString().split('T')[0]);
+          }
+        } catch {}
+      }
     }
   }, [editPost]);
 
@@ -265,8 +278,18 @@ export default function Create() {
     }
   };
 
+  const formatDateForPost = (dateStr: string) => {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const d = new Date(year, month - 1, day);
+    return d.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
   const publishContent = (text: string) => {
-    const postData: InsertBlogPost = { content: text };
+    const postData: InsertBlogPost = { content: text, date: formatDateForPost(postDate) };
     if (isEditMode) {
       updateMutation.mutate(postData);
     } else {
@@ -473,7 +496,31 @@ export default function Create() {
         <div className="sticky top-0 z-40 bg-transparent">
           <div className="max-w-5xl mx-auto px-3 sm:px-6 py-2 sm:py-3 flex items-center justify-between">
             {/* Stats */}
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+              <button
+                type="button"
+                onClick={() => setShowDatePicker(!showDatePicker)}
+                className="flex items-center gap-1 hover:text-foreground transition-colors"
+                data-testid="button-date-toggle"
+              >
+                <CalendarDays className="w-3 h-3" />
+                <span>{formatDateForPost(postDate)}</span>
+              </button>
+              {showDatePicker && (
+                <input
+                  type="date"
+                  value={postDate}
+                  onChange={(e) => {
+                    setPostDate(e.target.value);
+                    setShowDatePicker(false);
+                  }}
+                  className="text-xs bg-transparent border-b border-muted-foreground/30 focus:border-foreground outline-none py-0.5"
+                  data-testid="input-date"
+                  autoFocus
+                  onBlur={() => setShowDatePicker(false)}
+                />
+              )}
+              <span>·</span>
               <span>{stats.words} words</span>
               {stats.readTime > 0 && (
                 <>

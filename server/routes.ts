@@ -202,7 +202,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const postData = insertBlogPostSchema.parse(req.body);
       console.log("[CREATE POST] Content length:", postData.content.length);
       
-      const date = new Date().toLocaleDateString("en-US", {
+      const date = postData.date || new Date().toLocaleDateString("en-US", {
         year: "numeric",
         month: "long",
         day: "numeric",
@@ -267,7 +267,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (postData.content) {
         const { title, category, excerpt, readTime } = await generateAllMetadata(postData.content);
 
-        const finalData = {
+        const finalData: Record<string, any> = {
           title: postData.title || title,
           category: postData.category || category,
           content: postData.content,
@@ -276,6 +276,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             : excerpt,
           readTime,
         };
+        if (postData.date) {
+          finalData.date = postData.date;
+        }
 
         const post = await storage.updatePost(id, finalData);
 
