@@ -199,7 +199,7 @@ export default function Create() {
       console.log('[PUBLISH] Success, post id:', result.id);
       return result;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/posts'] });
       setTitle("");
       setContent("");
@@ -209,7 +209,7 @@ export default function Create() {
         title: "Published!",
         description: "Your story has been shared.",
       });
-      setLocation('/');
+      setLocation(`/post/${data.id}`);
     },
     onError: (error: Error) => {
       console.error('[PUBLISH] Mutation error:', error.message);
@@ -243,7 +243,7 @@ export default function Create() {
       console.log('[UPDATE] Success, post id:', result.id);
       return result;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/posts'] });
       queryClient.invalidateQueries({ queryKey: ['/api/posts', editId] });
       setTitle("");
@@ -254,7 +254,7 @@ export default function Create() {
         title: "Updated!",
         description: "Your story has been updated.",
       });
-      setLocation('/');
+      setLocation(`/post/${data.id}`);
     },
     onError: (error: Error) => {
       console.error('[UPDATE] Mutation error:', error.message);
