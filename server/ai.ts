@@ -185,7 +185,7 @@ export async function generateAllMetadata(content: string): Promise<{
     const prompt = `You are helping create metadata for a personal blog post written by an older adult sharing memories and life wisdom.
 
 Based on the content below, generate:
-1. A warm, inviting title (4-8 words) that captures the heart of the story
+1. A simple, conversational title (3-6 words) — write it the way the author would describe the story to a friend over chai. Be specific to the content, not poetic or preachy. Never use grand words like "embrace", "unlock", "journey", "tapestry", "wisdom", "cherish", "navigating", "illuminating". Good examples: "Papa's Old Radio", "That Summer in Shimla", "Learning to Make Rotis", "The Mango Tree Next Door". Bad examples: "Embracing Life's Beautiful Journey", "Unlocking Timeless Wisdom".
 2. A simple category (1-2 words) like "Family", "Travel", "Wisdom", "Daily Life", "Memories", etc.
 3. A compelling excerpt (15-25 words, 1-2 sentences) that invites the reader in
 
