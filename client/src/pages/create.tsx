@@ -492,7 +492,7 @@ export default function Create() {
         className="min-h-screen relative py-4 sm:py-8"
       >
         {/* Ultra-Minimal Top Bar */}
-        <div className="sticky top-0 z-40 bg-transparent">
+        <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border/30">
           <div className="max-w-5xl mx-auto px-3 sm:px-6 py-2 sm:py-3 flex items-center justify-between">
             {/* Stats */}
             <div className="flex items-center gap-2 text-xs text-muted-foreground whitespace-nowrap">
