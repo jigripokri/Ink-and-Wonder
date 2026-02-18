@@ -246,6 +246,23 @@ ${content.substring(0, 800)}`;
   }
 }
 
+const referencePhotoPath = path.resolve("server", "reference_photo.jpg");
+
+function loadReferencePhoto(): { inlineData: { data: string; mimeType: string } } | null {
+  try {
+    const photoBuffer = fs.readFileSync(referencePhotoPath);
+    return {
+      inlineData: {
+        data: photoBuffer.toString("base64"),
+        mimeType: "image/jpeg",
+      },
+    };
+  } catch {
+    console.warn("[ILLUSTRATION] Reference photo not found at", referencePhotoPath);
+    return null;
+  }
+}
+
 export async function generateIllustration(postId: number, content: string, title: string): Promise<string | null> {
   const illustrationsDir = path.resolve("client", "public", "illustrations");
   if (!fs.existsSync(illustrationsDir)) {
@@ -256,7 +273,7 @@ export async function generateIllustration(postId: number, content: string, titl
 
   const prompt = `Create a simple black ink line drawing illustration on a pure white background, in the style of RK Laxman's illustrations for Malgudi Days and The Common Man cartoons.
 
-The protagonist (if the scene calls for a human figure) must be an Indian woman. By default she is around 60 years old — warm face, sari or salwar, reading glasses perhaps pushed up on her head, the quiet dignity of a grandmother. However, if the blog post clearly describes a memory from a younger age (childhood, college, early marriage, young motherhood), draw her at that younger age instead. Infer the right age from the content.
+I have attached a reference photo of the protagonist. The protagonist in the illustration should roughly resemble this woman — her face shape, hair, build, and general appearance — rendered as a simple ink line drawing (not a photorealistic portrait). By default draw her at her current age (~60). However, if the blog post clearly describes a memory from a younger age (childhood, college, early marriage, young motherhood), draw her younger accordingly. Infer the right age from the content.
 
 Style rules:
 - Clean black pen-and-ink outlines only, no color, no gray tones
@@ -275,7 +292,14 @@ ${content.substring(0, 500)}`;
   const startTime = Date.now();
 
   try {
-    const result = await imageModel.generateContent(prompt);
+    const refPhoto = loadReferencePhoto();
+    const contentParts: any[] = [];
+    if (refPhoto) {
+      contentParts.push(refPhoto);
+    }
+    contentParts.push({ text: prompt });
+
+    const result = await imageModel.generateContent(contentParts);
     const parts = result.response.candidates?.[0]?.content?.parts || [];
 
     for (const part of parts) {
