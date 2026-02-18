@@ -226,18 +226,16 @@ export default function BlogPost({ post, onBack }: BlogPostProps) {
                   <Eye className="h-4 w-4 text-muted-foreground" />
                 )}
               </Button>
-              {!illustrationExists && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => regenerateMutation.mutate()}
-                  disabled={regenerateMutation.isPending}
-                  title="Generate illustration"
-                  data-testid="button-generate-illustration"
-                >
-                  <RefreshCw className={`h-4 w-4 text-muted-foreground ${regenerateMutation.isPending ? 'animate-spin' : ''}`} />
-                </Button>
-              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => regenerateMutation.mutate()}
+                disabled={regenerateMutation.isPending}
+                title={illustrationExists ? "Regenerate illustration" : "Generate illustration"}
+                data-testid="button-regenerate-illustration"
+              >
+                <RefreshCw className={`h-4 w-4 text-muted-foreground ${regenerateMutation.isPending ? 'animate-spin' : ''}`} />
+              </Button>
               <Button
                 variant="ghost"
                 onClick={handleDelete}
@@ -309,7 +307,7 @@ export default function BlogPost({ post, onBack }: BlogPostProps) {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.2 }}
-                      className="my-6 flex flex-col items-center gap-1"
+                      className="my-6 flex flex-col items-center"
                     >
                       <img
                         src={illustrationUrl}
@@ -317,18 +315,6 @@ export default function BlogPost({ post, onBack }: BlogPostProps) {
                         className="w-[200px] sm:w-[250px] h-auto"
                         data-testid="img-illustration"
                       />
-                      {isAuthenticated && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => regenerateMutation.mutate()}
-                          disabled={regenerateMutation.isPending}
-                          className="opacity-40 hover:opacity-100 transition-opacity h-7 w-7"
-                          data-testid="button-regenerate-illustration"
-                        >
-                          <RefreshCw className={`h-3.5 w-3.5 ${regenerateMutation.isPending ? 'animate-spin' : ''}`} />
-                        </Button>
-                      )}
                     </motion.div>
                   )}
                   <motion.p
@@ -365,20 +351,6 @@ export default function BlogPost({ post, onBack }: BlogPostProps) {
                       className="w-full h-auto"
                       data-testid="img-illustration"
                     />
-                    {isAuthenticated && (
-                      <span className="flex justify-center mt-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => regenerateMutation.mutate()}
-                          disabled={regenerateMutation.isPending}
-                          className="opacity-40 hover:opacity-100 transition-opacity h-7 w-7"
-                          data-testid="button-regenerate-illustration"
-                        >
-                          <RefreshCw className={`h-3.5 w-3.5 ${regenerateMutation.isPending ? 'animate-spin' : ''}`} />
-                        </Button>
-                      </span>
-                    )}
                   </span>
                   {para}
                 </motion.div>
