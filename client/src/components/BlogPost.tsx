@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Edit, Trash2, Share2, Check, Link, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Edit, Trash2, Share2, Check, Link, Eye, EyeOff, RefreshCw } from "lucide-react";
 import { useState, useEffect } from "react";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -101,7 +101,8 @@ export default function BlogPost({ post, onBack }: BlogPostProps) {
   };
 
   const [illustrationExists, setIllustrationExists] = useState(false);
-  const illustrationUrl = `/illustrations/post-${post.id}.png`;
+  const [illustrationVersion, setIllustrationVersion] = useState(Date.now());
+  const illustrationUrl = `/illustrations/post-${post.id}.png?v=${illustrationVersion}`;
 
   useEffect(() => {
     const img = new Image();
@@ -109,6 +110,24 @@ export default function BlogPost({ post, onBack }: BlogPostProps) {
     img.onerror = () => setIllustrationExists(false);
     img.src = illustrationUrl;
   }, [illustrationUrl]);
+
+  const regenerateMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`/api/posts/${post.id}/illustration`, {
+        method: "POST",
+      });
+      if (!response.ok) throw new Error("Failed to regenerate illustration");
+      return response.json();
+    },
+    onSuccess: () => {
+      setIllustrationVersion(Date.now());
+      setIllustrationExists(true);
+      toast({ title: "Illustration regenerated" });
+    },
+    onError: () => {
+      toast({ title: "Failed to regenerate", description: "Please try again.", variant: "destructive" });
+    },
+  });
 
   const [copied, setCopied] = useState(false);
 
@@ -207,6 +226,18 @@ export default function BlogPost({ post, onBack }: BlogPostProps) {
                   <Eye className="h-4 w-4 text-muted-foreground" />
                 )}
               </Button>
+              {!illustrationExists && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => regenerateMutation.mutate()}
+                  disabled={regenerateMutation.isPending}
+                  title="Generate illustration"
+                  data-testid="button-generate-illustration"
+                >
+                  <RefreshCw className={`h-4 w-4 text-muted-foreground ${regenerateMutation.isPending ? 'animate-spin' : ''}`} />
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 onClick={handleDelete}
@@ -278,7 +309,7 @@ export default function BlogPost({ post, onBack }: BlogPostProps) {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.2 }}
-                      className="my-6 flex justify-center"
+                      className="my-6 flex flex-col items-center gap-1"
                     >
                       <img
                         src={illustrationUrl}
@@ -286,6 +317,18 @@ export default function BlogPost({ post, onBack }: BlogPostProps) {
                         className="w-[200px] sm:w-[250px] h-auto"
                         data-testid="img-illustration"
                       />
+                      {isAuthenticated && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => regenerateMutation.mutate()}
+                          disabled={regenerateMutation.isPending}
+                          className="opacity-40 hover:opacity-100 transition-opacity h-7 w-7"
+                          data-testid="button-regenerate-illustration"
+                        >
+                          <RefreshCw className={`h-3.5 w-3.5 ${regenerateMutation.isPending ? 'animate-spin' : ''}`} />
+                        </Button>
+                      )}
                     </motion.div>
                   )}
                   <motion.p
@@ -305,24 +348,40 @@ export default function BlogPost({ post, onBack }: BlogPostProps) {
 
             if (useFloatedLayout && i === 1) {
               return (
-                <motion.p
+                <motion.div
                   key={i}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
                   className="text-lg leading-relaxed opacity-90 mb-8"
                 >
-                  <motion.img
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.3 }}
-                    src={illustrationUrl}
-                    alt={`Illustration for ${post.title}`}
-                    className="block mx-auto mb-4 sm:float-right sm:ml-6 sm:mb-4 sm:mx-0 w-[200px] sm:w-[200px] md:w-[240px] h-auto"
-                    data-testid="img-illustration"
-                  />
+                  <span className="block mx-auto mb-1 sm:float-right sm:ml-6 sm:mb-4 sm:mx-0 w-[200px] sm:w-[200px] md:w-[240px]">
+                    <motion.img
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.3 }}
+                      src={illustrationUrl}
+                      alt={`Illustration for ${post.title}`}
+                      className="w-full h-auto"
+                      data-testid="img-illustration"
+                    />
+                    {isAuthenticated && (
+                      <span className="flex justify-center mt-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => regenerateMutation.mutate()}
+                          disabled={regenerateMutation.isPending}
+                          className="opacity-40 hover:opacity-100 transition-opacity h-7 w-7"
+                          data-testid="button-regenerate-illustration"
+                        >
+                          <RefreshCw className={`h-3.5 w-3.5 ${regenerateMutation.isPending ? 'animate-spin' : ''}`} />
+                        </Button>
+                      </span>
+                    )}
+                  </span>
                   {para}
-                </motion.p>
+                </motion.div>
               );
             }
 

@@ -381,7 +381,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/admin/test-illustration/:id", requireAuth, async (req, res) => {
+  app.post("/api/posts/:id/illustration", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) return res.status(400).json({ error: "Invalid post ID" });
