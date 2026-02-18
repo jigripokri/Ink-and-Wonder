@@ -4,7 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Edit, Trash2, Share2, Check, Link, Eye, EyeOff } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
@@ -99,6 +99,16 @@ export default function BlogPost({ post, onBack }: BlogPostProps) {
       deleteMutation.mutate();
     }
   };
+
+  const [illustrationExists, setIllustrationExists] = useState(false);
+  const illustrationUrl = `/illustrations/post-${post.id}.png`;
+
+  useEffect(() => {
+    const img = new Image();
+    img.onload = () => setIllustrationExists(true);
+    img.onerror = () => setIllustrationExists(false);
+    img.src = illustrationUrl;
+  }, [illustrationUrl]);
 
   const [copied, setCopied] = useState(false);
 
@@ -251,6 +261,22 @@ export default function BlogPost({ post, onBack }: BlogPostProps) {
             </>
           )}
         </div>
+
+        {illustrationExists && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="my-8 flex justify-center"
+          >
+            <img
+              src={illustrationUrl}
+              alt={`Illustration for ${post.title}`}
+              className="max-w-[280px] sm:max-w-[340px] w-full h-auto rounded-md"
+              data-testid="img-illustration"
+            />
+          </motion.div>
+        )}
 
         <div className="prose prose-lg max-w-none">
           {paragraphs.map((para, i) => {
