@@ -6,6 +6,7 @@ import { fileURLToPath } from "url";
 import { storage } from "./storage";
 import { insertBlogPostSchema } from "@shared/schema";
 import { enhanceWithAI, generateMetadata, generateAllMetadata, generateIllustration } from "./ai";
+import { objectStorageClient } from "./replit_integrations/object_storage";
 import { z } from "zod";
 
 function requireAuth(req: Request, res: Response, next: NextFunction) {
@@ -398,6 +399,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Test illustration error:", error);
       res.status(500).json({ error: "Failed to generate illustration" });
+    }
+  });
+
+  app.get("/illustrations/:filename", async (req, res) => {
+    try {
+      const filename = req.params.filename;
+      const publicPaths = (process.env.PUBLIC_OBJECT_SEARCH_PATHS || "").split(",").map(p => p.trim()).filter(p => p.length > 0);
+      
+      for (const searchPath of publicPaths) {
+        const pathStr = searchPath.startsWith("/") ? searchPath.slice(1) : searchPath;
+        const parts = pathStr.split("/");
+        const bucketName = parts[0];
+        const pathPrefix = parts.slice(1).join("/");
+        
+        const objectName = `${pathPrefix}/illustrations/${filename}`;
+        const bucket = objectStorageClient.bucket(bucketName);
+        const file = bucket.file(objectName);
+        const [exists] = await file.exists();
+        
+        if (exists) {
+          res.set({
+            "Content-Type": "image/png",
+            "Cache-Control": "public, max-age=31536000, immutable",
+          });
+          const stream = file.createReadStream();
+          stream.pipe(res);
+          return;
+        }
+      }
+      
+      res.status(404).json({ error: "Illustration not found" });
+    } catch (error) {
+      console.error("Error serving illustration:", error);
+      res.status(500).json({ error: "Failed to serve illustration" });
+    }
+  });
+
+  app.post("/api/illustrations/migrate", requireAuth, async (req, res) => {
+    try {
+      const dirs = [
+        path.resolve("client", "public", "illustrations"),
+        path.resolve("dist", "public", "illustrations"),
+      ];
+      
+      const publicPaths = (process.env.PUBLIC_OBJECT_SEARCH_PATHS || "").split(",").map(p => p.trim()).filter(p => p.length > 0);
+      if (publicPaths.length === 0) return res.status(500).json({ error: "Object storage not configured" });
+      
+      const fullPath = publicPaths[0];
+      const pathStr = fullPath.startsWith("/") ? fullPath.slice(1) : fullPath;
+      const parts = pathStr.split("/");
+      const bucketName = parts[0];
+      const pathPrefix = parts.slice(1).join("/");
+      
+      let migrated = 0;
+      let skipped = 0;
+      
+      for (const dir of dirs) {
+        if (!fs.existsSync(dir)) continue;
+        const files = fs.readdirSync(dir).filter(f => f.endsWith(".png"));
+        
+        for (const filename of files) {
+          const objectName = `${pathPrefix}/illustrations/${filename}`;
+          const bucket = objectStorageClient.bucket(bucketName);
+          const file = bucket.file(objectName);
+          const [exists] = await file.exists();
+          
+          if (exists) {
+            skipped++;
+            continue;
+          }
+          
+          const buffer = fs.readFileSync(path.join(dir, filename));
+          await file.save(buffer, { contentType: "image/png" });
+          migrated++;
+        }
+      }
+      
+      res.json({ migrated, skipped, total: migrated + skipped });
+    } catch (error) {
+      console.error("Migration error:", error);
+      res.status(500).json({ error: "Migration failed" });
     }
   });
 

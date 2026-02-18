@@ -2,6 +2,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import fs from "fs";
 import path from "path";
 import sharp from "sharp";
+import { objectStorageClient } from "./replit_integrations/object_storage";
 
 if (!process.env.GEMINI_API_KEY) {
   console.error("GEMINI_API_KEY is not set in environment variables");
@@ -265,16 +266,6 @@ function loadReferencePhoto(): { inlineData: { data: string; mimeType: string } 
 }
 
 export async function generateIllustration(postId: number, content: string, title: string): Promise<string | null> {
-  const isDev = process.env.NODE_ENV !== "production";
-  const baseDir = isDev
-    ? path.resolve("client", "public", "illustrations")
-    : path.resolve("dist", "public", "illustrations");
-  if (!fs.existsSync(baseDir)) {
-    fs.mkdirSync(baseDir, { recursive: true });
-  }
-
-  const outputPath = path.join(baseDir, `post-${postId}.png`);
-
   const prompt = `Create a symbolic ink line drawing illustration for a blog post. Fill the ENTIRE square canvas — use the full width and full height. No large empty margins.
 
 Arrange 3-5 symbolic objects and motifs from the blog content in a cohesive scene or vignette. Draw the objects large, filling the square. Think of an editorial newspaper illustration.
@@ -319,9 +310,20 @@ ${content.substring(0, 500)}`;
             .png()
             .toBuffer();
 
-          fs.writeFileSync(outputPath, finalBuffer);
+          const publicPaths = (process.env.PUBLIC_OBJECT_SEARCH_PATHS || "").split(",").map(p => p.trim()).filter(p => p.length > 0);
+          if (publicPaths.length === 0) throw new Error("PUBLIC_OBJECT_SEARCH_PATHS not configured");
+          const fullPath = publicPaths[0];
+          const pathParts = fullPath.startsWith("/") ? fullPath.slice(1).split("/") : fullPath.split("/");
+          const bucketName = pathParts[0];
+          const pathPrefix = pathParts.slice(1).join("/");
+
+          const objectName = `${pathPrefix}/illustrations/post-${postId}.png`;
+          const bucket = objectStorageClient.bucket(bucketName);
+          const file = bucket.file(objectName);
+          await file.save(finalBuffer, { contentType: "image/png" });
+
           const duration = Date.now() - startTime;
-          console.log(`[ILLUSTRATION] Saved post-${postId}.png (${duration}ms, ${size}x${size}, ${Math.round(finalBuffer.length / 1024)}KB)`);
+          console.log(`[ILLUSTRATION] Uploaded post-${postId}.png to object storage (${duration}ms, ${size}x${size}, ${Math.round(finalBuffer.length / 1024)}KB)`);
           return `/illustrations/post-${postId}.png`;
         }
       }

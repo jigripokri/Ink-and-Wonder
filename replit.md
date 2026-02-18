@@ -13,12 +13,18 @@ Writers simply type their thoughts and hit Publish. AI automatically polishes th
 - Typography-first editorial design with generous whitespace
 - **CRITICAL: NEVER write any script, migration, or startup code that deletes, truncates, or bulk-removes blog posts. Post data is irreplaceable. The only allowed deletion is the single-post DELETE /api/posts/:id endpoint triggered by the authenticated user.**
 
-## Recent Changes (February 14, 2026)
+## Recent Changes (February 18, 2026)
+
+- **Illustrations persisted to Object Storage**: Illustrations now upload to Replit Object Storage instead of local filesystem, surviving redeployments
+- **Illustration serving route**: `GET /illustrations/:filename` serves from object storage with immutable cache headers
+- **Migration endpoint**: `POST /api/illustrations/migrate` (auth required) migrates local filesystem illustrations to object storage
+- **AI illustration generation**: Uses Gemini 2.5 Flash Image model with 3-attempt retry logic, RK Laxman ink style, 300x300px
+
+## Earlier Changes (February 14, 2026)
 
 - **Site renamed**: Header and tab title now show "Ink & Wonder"; hero still alternates Nani/Dadi
 - **Date picker on write page**: Minimal calendar icon in stats bar; defaults to today, tap to change for backdating old posts
 - **Posts sorted by date**: Home page shows most recent post date first (not creation timestamp), so backdated posts appear in correct chronological order
-- **Secrets cleanup**: Removed DEPLOYMENT.md and PROJECT_DOSSIER.md that contained exposed credentials
 - **Fixed post deletion bug**: Removed startup cleanup script that was deleting all but the latest post on every deployment
 - **Mobile improvements**: Compact hero on mobile, single-line stats bar, responsive textarea (60vh)
 - **Write button**: Prominent button with pen icon in header; switches to outline style when on write page
