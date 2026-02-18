@@ -264,15 +264,15 @@ export default function BlogPost({ post, onBack }: BlogPostProps) {
 
         {illustrationExists && (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="my-8 flex justify-center"
+            className="my-6 flex justify-center"
           >
             <img
               src={illustrationUrl}
               alt={`Illustration for ${post.title}`}
-              className="max-w-[280px] sm:max-w-[340px] w-full h-auto rounded-md"
+              className="w-full max-h-[120px] sm:max-h-[160px] object-contain"
               data-testid="img-illustration"
             />
           </motion.div>

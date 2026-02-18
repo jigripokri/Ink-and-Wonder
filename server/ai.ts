@@ -271,35 +271,29 @@ export async function generateIllustration(postId: number, content: string, titl
 
   const outputPath = path.join(illustrationsDir, `post-${postId}.png`);
 
-  const prompt = `Create a simple black ink line drawing illustration on a pure white background, in the style of RK Laxman's illustrations for Malgudi Days and The Common Man cartoons.
+  const prompt = `Create a wide horizontal banner illustration (landscape format, roughly 3:1 aspect ratio) in simple black ink line drawing style on a pure white background, inspired by RK Laxman's pen-and-ink work.
 
-I have attached a reference photo of the protagonist. The protagonist in the illustration should roughly resemble this woman — her face shape, hair, build, and general appearance — rendered as a simple ink line drawing (not a photorealistic portrait). By default draw her at around 50 years old. However, if the blog post clearly describes a memory from a younger age (childhood, college, early marriage, young motherhood), draw her younger accordingly. Infer the right age from the content.
+This is a SYMBOLIC illustration for a blog post. Do NOT draw a person sitting and thinking. Instead, draw the key objects, symbols, and scenes from the blog post content arranged in a horizontal composition — like a decorative chapter header in a book.
+
+For example: if the post is about cooking, draw the specific dishes, spices, utensils mentioned. If about a journey, draw the landmarks, vehicles, landscape. If about family, draw symbolic objects like a dining table, photo frames, toys. Pick 2-4 concrete objects or symbols from the actual blog content and arrange them in a pleasing horizontal line or vignette.
 
 Style rules:
-- Clean black pen-and-ink outlines only, no color, no gray tones
-- Minimal crosshatching for shading, mostly clean expressive lines
-- Warm, observational, slice-of-life tone
-- Indian setting, characters, and objects
-- Simple composition, not cluttered — focus on one quiet moment or scene
+- Clean black pen-and-ink outlines only, no color, no gray tones, no fills
+- Minimal crosshatching, mostly clean expressive lines
+- Indian setting and objects when relevant
+- Horizontal composition spread across the width — NOT a portrait or square
 - Absolutely no text, no captions, no labels, no speech bubbles, no words on any object
 - White background, nothing else
-- Evocative and gentle, like a sketch in a personal diary
+- Sparse and elegant, like a chapter divider illustration
 
-Draw a scene inspired by this blog post titled "${title}":
+Blog post titled "${title}":
 ${content.substring(0, 500)}`;
 
   console.log(`[ILLUSTRATION] Generating for post ${postId}: "${title}"`);
   const startTime = Date.now();
 
   try {
-    const refPhoto = loadReferencePhoto();
-    const contentParts: any[] = [];
-    if (refPhoto) {
-      contentParts.push(refPhoto);
-    }
-    contentParts.push({ text: prompt });
-
-    const result = await imageModel.generateContent(contentParts);
+    const result = await imageModel.generateContent(prompt);
     const parts = result.response.candidates?.[0]?.content?.parts || [];
 
     for (const part of parts) {
