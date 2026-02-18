@@ -292,36 +292,48 @@ ${content.substring(0, 500)}`;
 
   console.log(`[ILLUSTRATION] Generating for post ${postId}: "${title}"`);
   const startTime = Date.now();
+  const maxRetries = 3;
 
-  try {
-    const result = await imageModel.generateContent(prompt);
-    const parts = result.response.candidates?.[0]?.content?.parts || [];
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      if (attempt > 1) {
+        const delay = attempt * 5000;
+        console.log(`[ILLUSTRATION] Retry ${attempt}/${maxRetries} for post ${postId} after ${delay / 1000}s...`);
+        await new Promise(r => setTimeout(r, delay));
+      }
 
-    for (const part of parts) {
-      if (part.inlineData) {
-        const rawBuffer = Buffer.from(part.inlineData.data, "base64");
+      const result = await imageModel.generateContent(prompt);
+      const parts = result.response.candidates?.[0]?.content?.parts || [];
 
-        const trimmed = await sharp(rawBuffer)
-          .trim({ threshold: 240 })
-          .toBuffer();
+      for (const part of parts) {
+        if (part.inlineData) {
+          const rawBuffer = Buffer.from(part.inlineData.data, "base64");
 
-        const size = 300;
-        const finalBuffer = await sharp(trimmed)
-          .resize(size, size, { fit: "contain", background: { r: 255, g: 255, b: 255, alpha: 1 } })
-          .png()
-          .toBuffer();
+          const trimmed = await sharp(rawBuffer)
+            .trim({ threshold: 240 })
+            .toBuffer();
 
-        fs.writeFileSync(outputPath, finalBuffer);
-        const duration = Date.now() - startTime;
-        console.log(`[ILLUSTRATION] Saved post-${postId}.png (${duration}ms, ${size}x${size}, ${Math.round(finalBuffer.length / 1024)}KB)`);
-        return `/illustrations/post-${postId}.png`;
+          const size = 300;
+          const finalBuffer = await sharp(trimmed)
+            .resize(size, size, { fit: "contain", background: { r: 255, g: 255, b: 255, alpha: 1 } })
+            .png()
+            .toBuffer();
+
+          fs.writeFileSync(outputPath, finalBuffer);
+          const duration = Date.now() - startTime;
+          console.log(`[ILLUSTRATION] Saved post-${postId}.png (${duration}ms, ${size}x${size}, ${Math.round(finalBuffer.length / 1024)}KB)`);
+          return `/illustrations/post-${postId}.png`;
+        }
+      }
+
+      console.error(`[ILLUSTRATION] No image data in response for post ${postId} (attempt ${attempt})`);
+    } catch (error: any) {
+      console.error(`[ILLUSTRATION] Error for post ${postId} (attempt ${attempt}):`, error?.message);
+      if (attempt === maxRetries) {
+        return null;
       }
     }
-
-    console.error(`[ILLUSTRATION] No image data in response for post ${postId}`);
-    return null;
-  } catch (error: any) {
-    console.error(`[ILLUSTRATION] Error for post ${postId}:`, error?.message);
-    return null;
   }
+
+  return null;
 }
