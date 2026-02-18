@@ -273,7 +273,7 @@ export async function generateIllustration(postId: number, content: string, titl
 
   const prompt = `Create a simple black ink line drawing illustration on a pure white background, in the style of RK Laxman's illustrations for Malgudi Days and The Common Man cartoons.
 
-I have attached a reference photo of the protagonist. The protagonist in the illustration should roughly resemble this woman — her face shape, hair, build, and general appearance — rendered as a simple ink line drawing (not a photorealistic portrait). By default draw her at her current age (~60). However, if the blog post clearly describes a memory from a younger age (childhood, college, early marriage, young motherhood), draw her younger accordingly. Infer the right age from the content.
+I have attached a reference photo of the protagonist. The protagonist in the illustration should roughly resemble this woman — her face shape, hair, build, and general appearance — rendered as a simple ink line drawing (not a photorealistic portrait). By default draw her at around 50 years old. However, if the blog post clearly describes a memory from a younger age (childhood, college, early marriage, young motherhood), draw her younger accordingly. Infer the right age from the content.
 
 Style rules:
 - Clean black pen-and-ink outlines only, no color, no gray tones
