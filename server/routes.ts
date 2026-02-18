@@ -5,7 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { storage } from "./storage";
 import { insertBlogPostSchema } from "@shared/schema";
-import { enhanceWithAI, generateMetadata, generateAllMetadata } from "./ai";
+import { enhanceWithAI, generateMetadata, generateAllMetadata, generateIllustration } from "./ai";
 import { z } from "zod";
 
 function requireAuth(req: Request, res: Response, next: NextFunction) {
@@ -371,6 +371,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("AI enhancement error:", error);
       res.status(500).json({ error: "Failed to enhance text" });
+    }
+  });
+
+  app.post("/api/admin/test-illustration/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) return res.status(400).json({ error: "Invalid post ID" });
+
+      const post = await storage.getPostById(id);
+      if (!post) return res.status(404).json({ error: "Post not found" });
+
+      const illustrationUrl = await generateIllustration(id, post.content, post.title);
+      if (!illustrationUrl) {
+        return res.status(500).json({ error: "Failed to generate illustration" });
+      }
+
+      res.json({ postId: id, title: post.title, illustrationUrl });
+    } catch (error) {
+      console.error("Test illustration error:", error);
+      res.status(500).json({ error: "Failed to generate illustration" });
     }
   });
 

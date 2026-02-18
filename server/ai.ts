@@ -1,4 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import fs from "fs";
+import path from "path";
 
 if (!process.env.GEMINI_API_KEY) {
   console.error("GEMINI_API_KEY is not set in environment variables");
@@ -8,6 +10,12 @@ if (!process.env.GEMINI_API_KEY) {
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const flashModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 const proModel = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
+const imageModel = genAI.getGenerativeModel({
+  model: "gemini-2.5-flash-image",
+  generationConfig: {
+    responseModalities: ["Image", "Text"],
+  } as any,
+});
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 🎨 Delightful Console Logging Utilities
@@ -235,5 +243,53 @@ ${content.substring(0, 800)}`;
       excerpt: firstSentence.substring(0, 150),
       readTime,
     };
+  }
+}
+
+export async function generateIllustration(postId: number, content: string, title: string): Promise<string | null> {
+  const illustrationsDir = path.resolve("client", "public", "illustrations");
+  if (!fs.existsSync(illustrationsDir)) {
+    fs.mkdirSync(illustrationsDir, { recursive: true });
+  }
+
+  const outputPath = path.join(illustrationsDir, `post-${postId}.png`);
+
+  const prompt = `Create a simple black ink line drawing illustration on a pure white background, in the style of RK Laxman's illustrations for Malgudi Days and The Common Man cartoons.
+
+Style rules:
+- Clean black pen-and-ink outlines only, no color, no gray tones
+- Minimal crosshatching for shading, mostly clean expressive lines
+- Warm, observational, slice-of-life tone
+- Indian setting, characters, and objects when relevant
+- Simple composition, not cluttered — focus on one quiet moment or scene
+- No text, no captions, no labels, no speech bubbles
+- White background, nothing else
+- Evocative and gentle, like a sketch in a personal diary
+
+Draw a scene inspired by this blog post titled "${title}":
+${content.substring(0, 500)}`;
+
+  console.log(`[ILLUSTRATION] Generating for post ${postId}: "${title}"`);
+  const startTime = Date.now();
+
+  try {
+    const result = await imageModel.generateContent(prompt);
+    const parts = result.response.candidates?.[0]?.content?.parts || [];
+
+    for (const part of parts) {
+      if (part.inlineData) {
+        const buffer = Buffer.from(part.inlineData.data, "base64");
+        fs.writeFileSync(outputPath, buffer);
+        const duration = Date.now() - startTime;
+        console.log(`[ILLUSTRATION] Saved post-${postId}.png (${duration}ms, ${Math.round(buffer.length / 1024)}KB)`);
+        return `/illustrations/post-${postId}.png`;
+      }
+    }
+
+    console.error(`[ILLUSTRATION] No image data in response for post ${postId}`);
+    return null;
+  } catch (error: any) {
+    console.error(`[ILLUSTRATION] Error for post ${postId}:`, error?.message);
+    return null;
   }
 }
