@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Edit, Trash2, Share2, Check, Link, Eye, EyeOff, RefreshCw, MoreVertical } from "lucide-react";
+import { ArrowLeft, Edit, Trash2, Share2, Check, Link, Eye, EyeOff, ImagePlus, MoreVertical } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -242,7 +242,7 @@ export default function BlogPost({ post, onBack }: BlogPostProps) {
                 data-testid="button-regenerate-illustration"
                 className="hidden sm:inline-flex"
               >
-                <RefreshCw className={`h-4 w-4 text-muted-foreground ${regenerateMutation.isPending ? 'animate-spin' : ''}`} />
+                <ImagePlus className="h-4 w-4 text-muted-foreground" />
               </Button>
               <Button
                 variant="ghost"
@@ -291,7 +291,7 @@ export default function BlogPost({ post, onBack }: BlogPostProps) {
                     disabled={regenerateMutation.isPending}
                     data-testid="menu-regenerate-illustration"
                   >
-                    <RefreshCw className={`h-4 w-4 mr-2 ${regenerateMutation.isPending ? 'animate-spin' : ''}`} />
+                    <ImagePlus className="h-4 w-4 mr-2" />
                     {illustrationExists ? "Regenerate illustration" : "Generate illustration"}
                   </DropdownMenuItem>
                   <DropdownMenuItem
