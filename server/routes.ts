@@ -258,6 +258,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const post = await storage.createPost(finalData);
       console.log("[CREATE POST] Success! Post ID:", post.id);
       res.status(201).json(post);
+
+      generateIllustration(post.id, post.content, post.title)
+        .then(url => {
+          if (url) console.log("[CREATE POST] Illustration generated:", url);
+          else console.log("[CREATE POST] Illustration generation returned null for post", post.id);
+        })
+        .catch(err => console.error("[CREATE POST] Illustration generation failed:", err));
     } catch (error: any) {
       if (error instanceof z.ZodError) {
         console.error("[CREATE POST] Zod validation error:", JSON.stringify(error.errors));
