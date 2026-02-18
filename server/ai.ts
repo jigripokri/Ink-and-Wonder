@@ -272,9 +272,9 @@ export async function generateIllustration(postId: number, content: string, titl
 
   const outputPath = path.join(illustrationsDir, `post-${postId}.png`);
 
-  const prompt = `Create a symbolic ink line drawing illustration for a blog post. Fill the ENTIRE canvas — use the full width and full height of the image. Do not leave large empty margins.
+  const prompt = `Create a symbolic ink line drawing illustration for a blog post. Fill the ENTIRE square canvas — use the full width and full height. No large empty margins.
 
-Arrange 3-5 symbolic objects and motifs from the blog content in a scene or vignette that fills the square canvas. The objects should be drawn large enough to occupy most of the space. Think of it like an editorial illustration that fills a column width in a newspaper.
+Arrange 3-5 symbolic objects and motifs from the blog content in a cohesive scene or vignette. Draw the objects large, filling the square. Think of an editorial newspaper illustration.
 
 Style rules:
 - Clean black pen-and-ink outlines on pure white background, inspired by RK Laxman
@@ -282,7 +282,7 @@ Style rules:
 - Indian setting and objects when relevant
 - Do NOT draw a person sitting and thinking — focus on symbolic objects and scenes from the content
 - Absolutely no text, no captions, no labels, no words on any object
-- Fill the canvas edge to edge with the composition
+- Fill the canvas edge to edge
 
 Blog post titled "${title}":
 ${content.substring(0, 500)}`;
@@ -302,23 +302,15 @@ ${content.substring(0, 500)}`;
           .trim({ threshold: 240 })
           .toBuffer();
 
-        const metadata = await sharp(trimmed).metadata();
-        const w = metadata.width || 1;
-        const h = metadata.height || 1;
-
-        const targetWidth = 768;
-        const targetHeight = Math.round((h / w) * targetWidth);
-        const maxHeight = Math.round(targetWidth * 0.4);
-        const finalHeight = Math.min(targetHeight, maxHeight);
-
+        const size = 300;
         const finalBuffer = await sharp(trimmed)
-          .resize(targetWidth, finalHeight, { fit: "contain", background: { r: 255, g: 255, b: 255, alpha: 1 } })
+          .resize(size, size, { fit: "contain", background: { r: 255, g: 255, b: 255, alpha: 1 } })
           .png()
           .toBuffer();
 
         fs.writeFileSync(outputPath, finalBuffer);
         const duration = Date.now() - startTime;
-        console.log(`[ILLUSTRATION] Saved post-${postId}.png (${duration}ms, ${targetWidth}x${finalHeight}, ${Math.round(finalBuffer.length / 1024)}KB)`);
+        console.log(`[ILLUSTRATION] Saved post-${postId}.png (${duration}ms, ${size}x${size}, ${Math.round(finalBuffer.length / 1024)}KB)`);
         return `/illustrations/post-${postId}.png`;
       }
     }
