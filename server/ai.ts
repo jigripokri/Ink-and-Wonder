@@ -256,13 +256,15 @@ export async function generateIllustration(postId: number, content: string, titl
 
   const prompt = `Create a simple black ink line drawing illustration on a pure white background, in the style of RK Laxman's illustrations for Malgudi Days and The Common Man cartoons.
 
+The protagonist (if the scene calls for a human figure) must be an Indian woman. By default she is around 60 years old — warm face, sari or salwar, reading glasses perhaps pushed up on her head, the quiet dignity of a grandmother. However, if the blog post clearly describes a memory from a younger age (childhood, college, early marriage, young motherhood), draw her at that younger age instead. Infer the right age from the content.
+
 Style rules:
 - Clean black pen-and-ink outlines only, no color, no gray tones
 - Minimal crosshatching for shading, mostly clean expressive lines
 - Warm, observational, slice-of-life tone
-- Indian setting, characters, and objects when relevant
+- Indian setting, characters, and objects
 - Simple composition, not cluttered — focus on one quiet moment or scene
-- No text, no captions, no labels, no speech bubbles
+- Absolutely no text, no captions, no labels, no speech bubbles, no words on any object
 - White background, nothing else
 - Evocative and gentle, like a sketch in a personal diary
 
