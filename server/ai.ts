@@ -265,12 +265,15 @@ function loadReferencePhoto(): { inlineData: { data: string; mimeType: string } 
 }
 
 export async function generateIllustration(postId: number, content: string, title: string): Promise<string | null> {
-  const illustrationsDir = path.resolve("client", "public", "illustrations");
-  if (!fs.existsSync(illustrationsDir)) {
-    fs.mkdirSync(illustrationsDir, { recursive: true });
+  const isDev = process.env.NODE_ENV !== "production";
+  const baseDir = isDev
+    ? path.resolve("client", "public", "illustrations")
+    : path.resolve("dist", "public", "illustrations");
+  if (!fs.existsSync(baseDir)) {
+    fs.mkdirSync(baseDir, { recursive: true });
   }
 
-  const outputPath = path.join(illustrationsDir, `post-${postId}.png`);
+  const outputPath = path.join(baseDir, `post-${postId}.png`);
 
   const prompt = `Create a symbolic ink line drawing illustration for a blog post. Fill the ENTIRE square canvas — use the full width and full height. No large empty margins.
 
