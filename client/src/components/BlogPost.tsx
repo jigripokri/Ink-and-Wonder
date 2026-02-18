@@ -3,7 +3,13 @@ import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Edit, Trash2, Share2, Check, Link, Eye, EyeOff, RefreshCw } from "lucide-react";
+import { ArrowLeft, Edit, Trash2, Share2, Check, Link, Eye, EyeOff, RefreshCw, MoreVertical } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useState, useEffect } from "react";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -219,6 +225,7 @@ export default function BlogPost({ post, onBack }: BlogPostProps) {
                 disabled={privacyMutation.isPending}
                 data-testid="button-toggle-privacy"
                 title={isPrivate ? "Make public" : "Make private"}
+                className="hidden sm:inline-flex"
               >
                 {isPrivate ? (
                   <EyeOff className="h-4 w-4 text-muted-foreground" />
@@ -233,6 +240,7 @@ export default function BlogPost({ post, onBack }: BlogPostProps) {
                 disabled={regenerateMutation.isPending}
                 title={illustrationExists ? "Regenerate illustration" : "Generate illustration"}
                 data-testid="button-regenerate-illustration"
+                className="hidden sm:inline-flex"
               >
                 <RefreshCw className={`h-4 w-4 text-muted-foreground ${regenerateMutation.isPending ? 'animate-spin' : ''}`} />
               </Button>
@@ -241,6 +249,7 @@ export default function BlogPost({ post, onBack }: BlogPostProps) {
                 onClick={handleDelete}
                 disabled={deleteMutation.isPending}
                 data-testid="button-delete"
+                className="hidden sm:inline-flex"
               >
                 <Trash2 className="h-4 w-4 text-muted-foreground" />
               </Button>
@@ -251,8 +260,51 @@ export default function BlogPost({ post, onBack }: BlogPostProps) {
                 data-testid="button-edit"
               >
                 <Edit className="h-4 w-4" />
-                Edit
+                <span className="hidden sm:inline">Edit</span>
               </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="sm:hidden"
+                    data-testid="button-overflow-menu"
+                  >
+                    <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={() => privacyMutation.mutate()}
+                    disabled={privacyMutation.isPending}
+                    data-testid="menu-toggle-privacy"
+                  >
+                    {isPrivate ? (
+                      <EyeOff className="h-4 w-4 mr-2" />
+                    ) : (
+                      <Eye className="h-4 w-4 mr-2" />
+                    )}
+                    {isPrivate ? "Make public" : "Make private"}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => regenerateMutation.mutate()}
+                    disabled={regenerateMutation.isPending}
+                    data-testid="menu-regenerate-illustration"
+                  >
+                    <RefreshCw className={`h-4 w-4 mr-2 ${regenerateMutation.isPending ? 'animate-spin' : ''}`} />
+                    {illustrationExists ? "Regenerate illustration" : "Generate illustration"}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={handleDelete}
+                    disabled={deleteMutation.isPending}
+                    className="text-destructive"
+                    data-testid="menu-delete"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete post
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           )}
         </div>
