@@ -318,7 +318,7 @@ export default function BlogPost({ post, onBack }: BlogPostProps) {
                     transition={{ delay: 0.3 }}
                     src={illustrationUrl}
                     alt={`Illustration for ${post.title}`}
-                    className="float-right ml-6 mb-2 w-[160px] sm:w-[200px] md:w-[240px] h-auto"
+                    className="block mx-auto mb-4 sm:float-right sm:ml-6 sm:mb-4 sm:mx-0 w-[200px] sm:w-[200px] md:w-[240px] h-auto"
                     data-testid="img-illustration"
                   />
                   {para}
