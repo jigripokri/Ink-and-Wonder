@@ -262,25 +262,48 @@ export default function BlogPost({ post, onBack }: BlogPostProps) {
           )}
         </div>
 
-        {illustrationExists && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="my-6 flex justify-center"
-          >
-            <img
-              src={illustrationUrl}
-              alt={`Illustration for ${post.title}`}
-              className="w-full h-auto"
-              data-testid="img-illustration"
-            />
-          </motion.div>
-        )}
-
         <div className="prose prose-lg max-w-none">
-          {paragraphs.map((para, i) => {
+          {(() => {
+            const isLongPost = paragraphs.length >= 5;
+            const useFloatedLayout = illustrationExists && isLongPost;
+            const useCenteredLayout = illustrationExists && !isLongPost;
+
+            return paragraphs.map((para, i) => {
+
             if (i === 0) {
+              return (
+                <div key={i}>
+                  {useCenteredLayout && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.2 }}
+                      className="my-6 flex justify-center"
+                    >
+                      <img
+                        src={illustrationUrl}
+                        alt={`Illustration for ${post.title}`}
+                        className="w-[200px] sm:w-[250px] h-auto"
+                        data-testid="img-illustration"
+                      />
+                    </motion.div>
+                  )}
+                  <motion.p
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="text-lg leading-relaxed opacity-90 mb-8"
+                  >
+                    <span className="float-left text-[3rem] sm:text-[4.5rem] leading-[0.85] mr-2 mt-1 font-medium">
+                      {para.charAt(0)}
+                    </span>
+                    {para.slice(1)}
+                  </motion.p>
+                </div>
+              );
+            }
+
+            if (useFloatedLayout && i === 1) {
               return (
                 <motion.p
                   key={i}
@@ -289,10 +312,16 @@ export default function BlogPost({ post, onBack }: BlogPostProps) {
                   transition={{ delay: i * 0.05 }}
                   className="text-lg leading-relaxed opacity-90 mb-8"
                 >
-                  <span className="float-left text-[3rem] sm:text-[4.5rem] leading-[0.85] mr-2 mt-1 font-medium">
-                    {para.charAt(0)}
-                  </span>
-                  {para.slice(1)}
+                  <motion.img
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                    src={illustrationUrl}
+                    alt={`Illustration for ${post.title}`}
+                    className="float-right ml-6 mb-2 w-[160px] sm:w-[200px] md:w-[240px] h-auto"
+                    data-testid="img-illustration"
+                  />
+                  {para}
                 </motion.p>
               );
             }
@@ -331,7 +360,8 @@ export default function BlogPost({ post, onBack }: BlogPostProps) {
                 {para}
               </motion.p>
             );
-          })}
+          });
+          })()}
         </div>
       </motion.article>
     </div>
