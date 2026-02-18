@@ -272,7 +272,7 @@ export default function BlogPost({ post, onBack }: BlogPostProps) {
             <img
               src={illustrationUrl}
               alt={`Illustration for ${post.title}`}
-              className="w-full max-h-[120px] sm:max-h-[160px] object-contain"
+              className="w-full max-h-[180px] sm:max-h-[240px] object-contain"
               data-testid="img-illustration"
             />
           </motion.div>
