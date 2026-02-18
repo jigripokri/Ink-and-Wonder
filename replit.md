@@ -63,6 +63,9 @@ Writers simply type their thoughts and hit Publish. AI automatically polishes th
 - `isPrivate` (boolean, default false)
 - `createdAt`, `updatedAt` (timestamps)
 
+### Production
+- **URL**: https://pratibhablog.replit.app
+
 ### Environment Variables
 - `DATABASE_URL` - PostgreSQL connection string
 - `GEMINI_API_KEY` - Google Gemini API key
