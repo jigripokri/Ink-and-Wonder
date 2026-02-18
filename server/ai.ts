@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import fs from "fs";
 import path from "path";
+import sharp from "sharp";
 
 if (!process.env.GEMINI_API_KEY) {
   console.error("GEMINI_API_KEY is not set in environment variables");
@@ -271,20 +272,17 @@ export async function generateIllustration(postId: number, content: string, titl
 
   const outputPath = path.join(illustrationsDir, `post-${postId}.png`);
 
-  const prompt = `Create a wide horizontal banner illustration (landscape format, roughly 3:1 aspect ratio) in simple black ink line drawing style on a pure white background, inspired by RK Laxman's pen-and-ink work.
+  const prompt = `Create a symbolic ink line drawing illustration for a blog post. Fill the ENTIRE canvas — use the full width and full height of the image. Do not leave large empty margins.
 
-This is a SYMBOLIC illustration for a blog post. Do NOT draw a person sitting and thinking. Instead, draw the key objects, symbols, and scenes from the blog post content arranged in a horizontal composition — like a decorative chapter header in a book.
-
-For example: if the post is about cooking, draw the specific dishes, spices, utensils mentioned. If about a journey, draw the landmarks, vehicles, landscape. If about family, draw symbolic objects like a dining table, photo frames, toys. Pick 2-4 concrete objects or symbols from the actual blog content and arrange them in a pleasing horizontal line or vignette.
+Arrange 3-5 symbolic objects and motifs from the blog content in a scene or vignette that fills the square canvas. The objects should be drawn large enough to occupy most of the space. Think of it like an editorial illustration that fills a column width in a newspaper.
 
 Style rules:
-- Clean black pen-and-ink outlines only, no color, no gray tones, no fills
-- Minimal crosshatching, mostly clean expressive lines
+- Clean black pen-and-ink outlines on pure white background, inspired by RK Laxman
+- Minimal crosshatching, expressive lines
 - Indian setting and objects when relevant
-- Horizontal composition spread across the width — NOT a portrait or square
-- Absolutely no text, no captions, no labels, no speech bubbles, no words on any object
-- White background, nothing else
-- Sparse and elegant, like a chapter divider illustration
+- Do NOT draw a person sitting and thinking — focus on symbolic objects and scenes from the content
+- Absolutely no text, no captions, no labels, no words on any object
+- Fill the canvas edge to edge with the composition
 
 Blog post titled "${title}":
 ${content.substring(0, 500)}`;
@@ -298,10 +296,29 @@ ${content.substring(0, 500)}`;
 
     for (const part of parts) {
       if (part.inlineData) {
-        const buffer = Buffer.from(part.inlineData.data, "base64");
-        fs.writeFileSync(outputPath, buffer);
+        const rawBuffer = Buffer.from(part.inlineData.data, "base64");
+
+        const trimmed = await sharp(rawBuffer)
+          .trim({ threshold: 240 })
+          .toBuffer();
+
+        const metadata = await sharp(trimmed).metadata();
+        const w = metadata.width || 1;
+        const h = metadata.height || 1;
+
+        const targetWidth = 768;
+        const targetHeight = Math.round((h / w) * targetWidth);
+        const maxHeight = Math.round(targetWidth * 0.4);
+        const finalHeight = Math.min(targetHeight, maxHeight);
+
+        const finalBuffer = await sharp(trimmed)
+          .resize(targetWidth, finalHeight, { fit: "contain", background: { r: 255, g: 255, b: 255, alpha: 1 } })
+          .png()
+          .toBuffer();
+
+        fs.writeFileSync(outputPath, finalBuffer);
         const duration = Date.now() - startTime;
-        console.log(`[ILLUSTRATION] Saved post-${postId}.png (${duration}ms, ${Math.round(buffer.length / 1024)}KB)`);
+        console.log(`[ILLUSTRATION] Saved post-${postId}.png (${duration}ms, ${targetWidth}x${finalHeight}, ${Math.round(finalBuffer.length / 1024)}KB)`);
         return `/illustrations/post-${postId}.png`;
       }
     }
