@@ -266,17 +266,18 @@ function loadReferencePhoto(): { inlineData: { data: string; mimeType: string } 
 }
 
 export async function generateIllustration(postId: number, content: string, title: string): Promise<string | null> {
-  const prompt = `Create a symbolic ink line drawing illustration for a blog post. Fill the ENTIRE square canvas — use the full width and full height. No large empty margins.
+  const prompt = `Create a black ink line drawing illustration on a pure white background for a personal blog post. The style should be like a beautiful editorial sketch — flowing, natural, expressive pen lines.
 
-Arrange 3-5 symbolic objects and motifs from the blog content in a cohesive scene or vignette. Draw the objects large, filling the square. Think of an editorial newspaper illustration.
+CRITICAL RULES — strictly follow every one:
+- Pure white background, black ink lines only
+- NO border, NO frame, NO decorative box, NO ruled edges drawn around the image — the illustration must have open edges that fade or extend naturally
+- NO human faces, NO portraits, NO figures with recognizable faces — only symbolic objects, nature, architecture, animals
+- NO text, NO captions, NO labels, NO words anywhere
+- The composition should feel organic and open, like the illustration naturally fills the space without being boxed in
 
-Style rules:
-- Clean black pen-and-ink outlines on pure white background, inspired by RK Laxman
-- Minimal crosshatching, expressive lines
-- Indian setting and objects when relevant
-- Do NOT draw a person sitting and thinking — focus on symbolic objects and scenes from the content
-- Absolutely no text, no captions, no labels, no words on any object
-- Fill the canvas edge to edge
+Composition: Choose 3-5 meaningful symbols or scenes from the blog content — nature, objects, architecture, animals, plants — and compose them into a harmonious scene. Let elements flow naturally across the canvas. Do not force content into a tight geometric shape.
+
+Style: Clean expressive pen-and-ink outlines, inspired by Indian editorial illustration. Minimal crosshatching. Lines should feel hand-drawn and alive. Use Indian motifs and settings where relevant to the content.
 
 Blog post titled "${title}":
 ${content.substring(0, 500)}`;
@@ -300,13 +301,10 @@ ${content.substring(0, 500)}`;
         if (part.inlineData) {
           const rawBuffer = Buffer.from(part.inlineData.data, "base64");
 
-          const trimmed = await sharp(rawBuffer)
-            .trim({ threshold: 240 })
-            .toBuffer();
-
-          const size = 300;
-          const finalBuffer = await sharp(trimmed)
-            .resize(size, size, { fit: "contain", background: { r: 255, g: 255, b: 255, alpha: 1 } })
+          // Resize to max 600px on longest side, preserving aspect ratio.
+          // No crop, no forced square — let the illustration breathe naturally.
+          const finalBuffer = await sharp(rawBuffer)
+            .resize(600, 600, { fit: "inside", withoutEnlargement: true })
             .png()
             .toBuffer();
 
@@ -323,7 +321,7 @@ ${content.substring(0, 500)}`;
           await file.save(finalBuffer, { contentType: "image/png" });
 
           const duration = Date.now() - startTime;
-          console.log(`[ILLUSTRATION] Uploaded post-${postId}.png to object storage (${duration}ms, ${size}x${size}, ${Math.round(finalBuffer.length / 1024)}KB)`);
+          console.log(`[ILLUSTRATION] Uploaded post-${postId}.png to object storage (${duration}ms, ${Math.round(finalBuffer.length / 1024)}KB)`);
           return `/illustrations/post-${postId}.png`;
         }
       }
