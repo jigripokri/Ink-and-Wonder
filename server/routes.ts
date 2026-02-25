@@ -185,10 +185,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!Array.isArray(posts)) {
       return res.status(400).json({ error: "Expected an array of posts" });
     }
-    const results = { imported: 0, failed: 0, errors: [] as string[] };
+    const results = { imported: 0, failed: 0, errors: [] as string[], idMappings: [] as {devId: number, prodId: number}[] };
     for (const post of posts) {
       try {
-        await storage.importPost({
+        const created = await storage.importPost({
           title: post.title,
           excerpt: post.excerpt,
           content: post.content,
@@ -200,6 +200,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           updatedAt: post.updatedAt ? new Date(post.updatedAt) : new Date(),
         });
         results.imported++;
+        if (post.devId != null) {
+          results.idMappings.push({ devId: post.devId, prodId: created.id });
+        }
       } catch (e: any) {
         results.failed++;
         results.errors.push(e.message);
