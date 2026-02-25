@@ -359,12 +359,12 @@ export default function BlogPost({ post, onBack }: BlogPostProps) {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.2 }}
-                      className="my-6 flex flex-col items-center"
+                      className="my-8 w-full"
                     >
                       <img
                         src={illustrationUrl}
                         alt={`Illustration for ${post.title}`}
-                        className="w-full h-auto"
+                        className="w-full h-auto block"
                         data-testid="img-illustration"
                       />
                     </motion.div>
