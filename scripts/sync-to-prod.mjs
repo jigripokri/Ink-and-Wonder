@@ -63,20 +63,37 @@ async function loginToProd() {
   return match ? match[0] : null;
 }
 
-async function importToProd(posts, cookie) {
+async function importBatch(batch, cookie) {
   const res = await fetch(`${PROD_URL}/api/admin/import`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Cookie: cookie,
     },
-    body: JSON.stringify(posts),
+    body: JSON.stringify(batch),
   });
   if (!res.ok) {
     const text = await res.text();
     throw new Error(`Import request failed (${res.status}): ${text}`);
   }
   return res.json();
+}
+
+async function importToProd(posts, cookie) {
+  const BATCH_SIZE = 5;
+  let totalImported = 0, totalFailed = 0;
+  const allErrors = [];
+  for (let i = 0; i < posts.length; i += BATCH_SIZE) {
+    const batch = posts.slice(i, i + BATCH_SIZE);
+    const from = i + 1, to = Math.min(i + BATCH_SIZE, posts.length);
+    process.stdout.write(`  Batch ${from}–${to} ... `);
+    const result = await importBatch(batch, cookie);
+    console.log(`imported=${result.imported} failed=${result.failed}`);
+    totalImported += result.imported || 0;
+    totalFailed += result.failed || 0;
+    if (result.errors?.length) allErrors.push(...result.errors);
+  }
+  return { imported: totalImported, failed: totalFailed, errors: allErrors };
 }
 
 async function main() {
