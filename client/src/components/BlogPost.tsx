@@ -106,16 +106,10 @@ export default function BlogPost({ post, onBack }: BlogPostProps) {
     }
   };
 
-  const [illustrationExists, setIllustrationExists] = useState(false);
+  const [illustrationError, setIllustrationError] = useState(false);
   const [illustrationVersion, setIllustrationVersion] = useState(Date.now());
   const illustrationUrl = `/illustrations/post-${post.id}.png?v=${illustrationVersion}`;
-
-  useEffect(() => {
-    const img = new Image();
-    img.onload = () => setIllustrationExists(true);
-    img.onerror = () => setIllustrationExists(false);
-    img.src = illustrationUrl;
-  }, [illustrationUrl]);
+  const illustrationExists = !illustrationError;
 
   const regenerateMutation = useMutation({
     mutationFn: async () => {
@@ -126,8 +120,8 @@ export default function BlogPost({ post, onBack }: BlogPostProps) {
       return response.json();
     },
     onSuccess: () => {
+      setIllustrationError(false);
       setIllustrationVersion(Date.now());
-      setIllustrationExists(true);
       toast({ title: "Illustration regenerated" });
     },
     onError: () => {
@@ -366,6 +360,7 @@ export default function BlogPost({ post, onBack }: BlogPostProps) {
                         alt={`Illustration for ${post.title}`}
                         className="w-full h-auto block"
                         data-testid="img-illustration"
+                        onError={() => setIllustrationError(true)}
                       />
                     </motion.div>
                   )}
@@ -402,6 +397,7 @@ export default function BlogPost({ post, onBack }: BlogPostProps) {
                       alt={`Illustration for ${post.title}`}
                       className="w-full h-auto"
                       data-testid="img-illustration"
+                      onError={() => setIllustrationError(true)}
                     />
                   </span>
                   {para}
