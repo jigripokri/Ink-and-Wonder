@@ -8,7 +8,6 @@ import { insertBlogPostSchema } from "@shared/schema";
 import { enhanceWithAI, generateMetadata, generateAllMetadata, generateIllustration } from "./ai";
 import { objectStorageClient } from "./replit_integrations/object_storage";
 import { z } from "zod";
-import pg from "pg";
 
 function requireAuth(req: Request, res: Response, next: NextFunction) {
   if ((req as any).cookies?.writer_auth === "authenticated") {
@@ -91,36 +90,6 @@ async function injectOgTags(req: Request, res: Response, meta: {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  app.get("/api/debug/db-check", async (req, res) => {
-    const result: any = {
-      DATABASE_URL_host: null,
-      NEON_DATABASE_URL_host: null,
-      NEON_DATABASE_URL_exists: !!process.env.NEON_DATABASE_URL,
-      neon_post_count: null,
-      neon_error: null,
-    };
-    try {
-      const dbUrl = process.env.DATABASE_URL;
-      if (dbUrl) result.DATABASE_URL_host = new URL(dbUrl).hostname;
-    } catch {}
-    try {
-      const neonUrl = process.env.NEON_DATABASE_URL;
-      if (neonUrl) {
-        result.NEON_DATABASE_URL_host = new URL(neonUrl).hostname;
-        const pool = new pg.Pool({ connectionString: neonUrl, ssl: { rejectUnauthorized: false }, connectionTimeoutMillis: 8000 });
-        try {
-          const r = await pool.query("SELECT COUNT(*) FROM blog_posts");
-          result.neon_post_count = parseInt(r.rows[0].count);
-        } finally {
-          await pool.end();
-        }
-      }
-    } catch (e: any) {
-      result.neon_error = e.message;
-    }
-    res.json(result);
-  });
-
   app.get("/", async (req, res, next) => {
     const viewId = req.query.view;
     const siteUrl = getBaseUrl(req);
