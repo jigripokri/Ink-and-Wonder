@@ -180,6 +180,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return res.json({ authenticated: false });
   });
 
+  app.post("/api/admin/import", requireAuth, async (req, res) => {
+    const posts = req.body;
+    if (!Array.isArray(posts)) {
+      return res.status(400).json({ error: "Expected an array of posts" });
+    }
+    const results = { imported: 0, failed: 0, errors: [] as string[] };
+    for (const post of posts) {
+      try {
+        await storage.importPost({
+          title: post.title,
+          excerpt: post.excerpt,
+          content: post.content,
+          category: post.category,
+          readTime: post.readTime ?? null,
+          date: post.date ?? null,
+          isPrivate: post.isPrivate ?? false,
+          createdAt: post.createdAt ? new Date(post.createdAt) : new Date(),
+          updatedAt: post.updatedAt ? new Date(post.updatedAt) : new Date(),
+        });
+        results.imported++;
+      } catch (e: any) {
+        results.failed++;
+        results.errors.push(e.message);
+      }
+    }
+    res.json(results);
+  });
+
   app.get("/api/posts", async (req, res) => {
     try {
       const isAuthed = (req as any).cookies?.writer_auth === "authenticated";

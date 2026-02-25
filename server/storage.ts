@@ -2,6 +2,18 @@ import { getDb, withRetry } from "./db";
 import { blogPosts, type InsertBlogPost, type BlogPost } from "@shared/schema";
 import { eq, desc, sql } from "drizzle-orm";
 
+export interface ImportPost {
+  title: string;
+  excerpt: string;
+  content: string;
+  category: string;
+  readTime: string | null;
+  date: string | null;
+  isPrivate: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface IStorage {
   getAllPosts(): Promise<BlogPost[]>;
   getPublicPosts(): Promise<BlogPost[]>;
@@ -10,6 +22,7 @@ export interface IStorage {
   updatePost(id: number, post: Partial<InsertBlogPost & { isPrivate: boolean }>): Promise<BlogPost | undefined>;
   deletePost(id: number): Promise<boolean>;
   togglePrivate(id: number): Promise<BlogPost | undefined>;
+  importPost(post: ImportPost): Promise<BlogPost>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -70,6 +83,23 @@ export class DatabaseStorage implements IStorage {
         .set({ isPrivate: !post.isPrivate, updatedAt: new Date() })
         .where(eq(blogPosts.id, id))
         .returning();
+      return results[0];
+    });
+  }
+
+  async importPost(post: ImportPost): Promise<BlogPost> {
+    return withRetry(async () => {
+      const results = await getDb().insert(blogPosts).values({
+        title: post.title,
+        excerpt: post.excerpt,
+        content: post.content,
+        category: post.category,
+        readTime: post.readTime,
+        date: post.date,
+        isPrivate: post.isPrivate,
+        createdAt: post.createdAt,
+        updatedAt: post.updatedAt,
+      }).returning();
       return results[0];
     });
   }
