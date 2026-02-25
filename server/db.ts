@@ -11,39 +11,66 @@ function isExternalHost(hostname: string): boolean {
   return hostname.includes('.') && !hostname.startsWith('127.') && hostname !== 'localhost';
 }
 
+function buildUrlFromPgVars(): string | null {
+  const { PGHOST, PGPORT, PGUSER, PGPASSWORD, PGDATABASE } = process.env;
+  if (PGHOST && PGUSER && PGPASSWORD && PGDATABASE) {
+    const port = PGPORT || "5432";
+    const encoded = encodeURIComponent(PGPASSWORD);
+    return `postgresql://${PGUSER}:${encoded}@${PGHOST}:${port}/${PGDATABASE}`;
+  }
+  return null;
+}
+
+async function tryResolveHost(url: string): Promise<string | null> {
+  try {
+    const parsed = new URL(url);
+    const hostname = parsed.hostname;
+    if (isExternalHost(hostname) || /^[\d.]+$/.test(hostname) || hostname === "localhost") {
+      console.log(`[DB] Host resolvable directly (host: ${hostname})`);
+      return url;
+    }
+    const { address } = await dnsLookup(hostname);
+    parsed.hostname = address;
+    console.log(`[DB] Resolved ${hostname} -> ${address}`);
+    return parsed.toString();
+  } catch {
+    return null;
+  }
+}
+
 async function resolveDbUrl(): Promise<string> {
   const dbUrl = process.env.DATABASE_URL;
   const neonUrl = process.env.NEON_DATABASE_URL;
 
   if (dbUrl) {
-    try {
-      const parsed = new URL(dbUrl);
-      const hostname = parsed.hostname;
-      if (isExternalHost(hostname) || /^[\d.]+$/.test(hostname) || hostname === "localhost") {
-        console.log(`[DB] Using DATABASE_URL (host: ${hostname})`);
-        return dbUrl;
-      }
-      const { address } = await dnsLookup(hostname);
-      parsed.hostname = address;
-      console.log(`[DB] Using DATABASE_URL, resolved ${hostname} -> ${address}`);
-      return parsed.toString();
-    } catch (e) {
-      console.log(`[DB] DATABASE_URL hostname unresolvable: ${e}`);
-      if (neonUrl) {
-        console.log(`[DB] Falling back to NEON_DATABASE_URL`);
-        return neonUrl;
-      }
-      return dbUrl;
+    const resolved = await tryResolveHost(dbUrl);
+    if (resolved) {
+      console.log(`[DB] Using DATABASE_URL`);
+      return resolved;
     }
+    console.log(`[DB] DATABASE_URL hostname unresolvable, trying PG* vars`);
+  }
+
+  const pgUrl = buildUrlFromPgVars();
+  if (pgUrl) {
+    const resolved = await tryResolveHost(pgUrl);
+    if (resolved) {
+      console.log(`[DB] Using connection built from PG* environment variables`);
+      return resolved;
+    }
+    console.log(`[DB] PG* vars hostname also unresolvable`);
   }
 
   if (neonUrl) {
-    console.log(`[DB] Using NEON_DATABASE_URL`);
+    console.log(`[DB] Falling back to NEON_DATABASE_URL`);
     return neonUrl;
   }
 
+  if (dbUrl) return dbUrl;
+  if (pgUrl) return pgUrl;
+
   throw new Error(
-    "No database URL found. Set DATABASE_URL or NEON_DATABASE_URL.",
+    "No database URL found. Set DATABASE_URL, PG* vars, or NEON_DATABASE_URL.",
   );
 }
 
