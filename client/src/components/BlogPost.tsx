@@ -364,7 +364,7 @@ export default function BlogPost({ post, onBack }: BlogPostProps) {
                       <img
                         src={illustrationUrl}
                         alt={`Illustration for ${post.title}`}
-                        className="w-[200px] sm:w-[250px] h-auto"
+                        className="w-full max-w-[520px] h-auto"
                         data-testid="img-illustration"
                       />
                     </motion.div>
@@ -393,7 +393,7 @@ export default function BlogPost({ post, onBack }: BlogPostProps) {
                   transition={{ delay: i * 0.05 }}
                   className="text-lg leading-relaxed opacity-90 mb-8"
                 >
-                  <span className="block mx-auto mb-1 sm:float-right sm:ml-6 sm:mb-4 sm:mx-0 w-[200px] sm:w-[200px] md:w-[240px]">
+                  <span className="block mx-auto mb-1 sm:float-right sm:ml-6 sm:mb-4 sm:mx-0 w-[300px] sm:w-[300px] md:w-[340px]">
                     <motion.img
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}

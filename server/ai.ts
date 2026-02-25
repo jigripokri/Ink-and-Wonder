@@ -266,21 +266,20 @@ function loadReferencePhoto(): { inlineData: { data: string; mimeType: string } 
 }
 
 export async function generateIllustration(postId: number, content: string, title: string): Promise<string | null> {
-  const prompt = `Create a black ink line drawing illustration on a pure white background for a personal blog post. The style should be like a beautiful editorial sketch — flowing, natural, expressive pen lines.
+  const prompt = `Create a WIDE HORIZONTAL ink line drawing illustration — landscape format, much wider than tall (like a newspaper banner or panoramic editorial sketch). The canvas is a wide rectangle, approximately 16:9.
 
-CRITICAL RULES — strictly follow every one:
-- Pure white background, black ink lines only
-- NO border, NO frame, NO decorative box, NO ruled edges drawn around the image — the illustration must have open edges that fade or extend naturally
-- NO human faces, NO portraits, NO figures with recognizable faces — only symbolic objects, nature, architecture, animals
-- NO text, NO captions, NO labels, NO words anywhere
-- The composition should feel organic and open, like the illustration naturally fills the space without being boxed in
+Style: Black ink on pure white background. Expressive hand-drawn pen-and-ink lines, inspired by Indian editorial illustration. Clean outlines, minimal crosshatching, alive and flowing. Indian motifs and settings where relevant.
 
-Composition: Choose 3-5 meaningful symbols or scenes from the blog content — nature, objects, architecture, animals, plants — and compose them into a harmonious scene. Let elements flow naturally across the canvas. Do not force content into a tight geometric shape.
+STRICT RULES:
+- HORIZONTAL / LANDSCAPE orientation — the scene must spread wide across the canvas, not tall
+- NO border, NO frame, NO decorative box, NO ruled edges — open composition with elements fading naturally at the edges
+- NO text, NO captions, NO labels, NO words on anything
+- Elements should be spread across the width of the image, not stacked vertically
 
-Style: Clean expressive pen-and-ink outlines, inspired by Indian editorial illustration. Minimal crosshatching. Lines should feel hand-drawn and alive. Use Indian motifs and settings where relevant to the content.
+Composition: Choose 3-5 meaningful symbols or motifs from the blog post — figures, objects, nature, architecture, animals — and arrange them in a wide panoramic scene. Think of it like a long scroll painting or a wide newspaper header vignette. The scene flows left to right across the canvas.
 
 Blog post titled "${title}":
-${content.substring(0, 500)}`;
+${content.substring(0, 600)}`;
 
   console.log(`[ILLUSTRATION] Generating for post ${postId}: "${title}"`);
   const startTime = Date.now();
@@ -301,10 +300,15 @@ ${content.substring(0, 500)}`;
         if (part.inlineData) {
           const rawBuffer = Buffer.from(part.inlineData.data, "base64");
 
-          // Resize to max 600px on longest side, preserving aspect ratio.
-          // No crop, no forced square — let the illustration breathe naturally.
+          // Target: wide 16:9 banner (900×506).
+          // fit:"contain" keeps ALL content; white padding fills any gaps.
+          // This means a square illustration sits centred in a wide white frame —
+          // which works well for open ink compositions on white.
           const finalBuffer = await sharp(rawBuffer)
-            .resize(600, 600, { fit: "inside", withoutEnlargement: true })
+            .resize(900, 506, {
+              fit: "contain",
+              background: { r: 255, g: 255, b: 255, alpha: 1 },
+            })
             .png()
             .toBuffer();
 
