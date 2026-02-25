@@ -42,38 +42,39 @@ async function resolveDbUrl(): Promise<string> {
   const dbUrl = process.env.DATABASE_URL;
   const neonUrl = process.env.NEON_DATABASE_URL;
 
-  // If DATABASE_URL uses an internal hostname (like "helium"), try to resolve it.
-  // This works in the dev container but not in deployed production.
+  // Step 1: Try DATABASE_URL — resolve internal hostnames like "helium" (works in dev).
   if (dbUrl) {
-    try {
-      const parsed = new URL(dbUrl);
-      const hostname = parsed.hostname;
-      if (!isExternalHost(hostname) && !/^[\d.]+$/.test(hostname) && hostname !== "localhost") {
-        const { address } = await dnsLookup(hostname);
-        parsed.hostname = address;
-        console.log(`[DB] Using DATABASE_URL, resolved ${hostname} -> ${address}`);
-        return parsed.toString();
-      }
-    } catch {
-      // Internal hostname didn't resolve — fall through to NEON_DATABASE_URL
-      console.log(`[DB] DATABASE_URL internal hostname unresolvable, using NEON_DATABASE_URL`);
+    const resolved = await tryResolveHost(dbUrl);
+    if (resolved) {
+      console.log(`[DB] Using DATABASE_URL`);
+      return resolved;
     }
+    console.log(`[DB] DATABASE_URL unresolvable, trying PG* environment variables`);
   }
 
-  // NEON_DATABASE_URL is the primary production database (has all blog posts)
+  // Step 2: Build connection from PG* vars — Replit sets these differently in
+  // production deployments, pointing to the production database.
+  const pgUrl = buildUrlFromPgVars();
+  if (pgUrl) {
+    const resolved = await tryResolveHost(pgUrl);
+    if (resolved) {
+      console.log(`[DB] Using production database from PG* environment variables`);
+      return resolved;
+    }
+    console.log(`[DB] PG* vars host also unresolvable`);
+  }
+
+  // Step 3: Try NEON_DATABASE_URL as last resort.
   if (neonUrl) {
-    console.log(`[DB] Using NEON_DATABASE_URL`);
+    console.log(`[DB] Falling back to NEON_DATABASE_URL`);
     return neonUrl;
   }
 
-  // Last resort: use DATABASE_URL directly even if external
-  if (dbUrl) {
-    console.log(`[DB] Using DATABASE_URL as fallback`);
-    return dbUrl;
-  }
+  if (dbUrl) return dbUrl;
+  if (pgUrl) return pgUrl;
 
   throw new Error(
-    "No database URL found. Set DATABASE_URL or NEON_DATABASE_URL.",
+    "No database URL found. Set DATABASE_URL, PG* vars, or NEON_DATABASE_URL.",
   );
 }
 
