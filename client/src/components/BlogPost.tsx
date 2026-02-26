@@ -10,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
@@ -182,7 +182,8 @@ export default function BlogPost({ post, onBack }: BlogPostProps) {
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+    <div>
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-8 sm:pt-12 pb-4">
       <motion.div
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
@@ -303,67 +304,71 @@ export default function BlogPost({ post, onBack }: BlogPostProps) {
           )}
         </div>
       </motion.div>
+      </div>
 
       <motion.article
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <div className="flex items-center gap-2 mb-4 flex-wrap">
-          <Badge className="text-xs uppercase tracking-widest" data-testid="badge-category">
-            {post.category}
-          </Badge>
-          {isPrivate && (
-            <Badge variant="outline" className="text-xs uppercase tracking-widest" data-testid="badge-private">
-              <EyeOff className="h-3 w-3 mr-1" />
-              Private
+        <div className="max-w-3xl mx-auto px-4 sm:px-6">
+          <div className="flex items-center gap-2 mb-4 flex-wrap">
+            <Badge className="text-xs uppercase tracking-widest" data-testid="badge-category">
+              {post.category}
             </Badge>
-          )}
+            {isPrivate && (
+              <Badge variant="outline" className="text-xs uppercase tracking-widest" data-testid="badge-private">
+                <EyeOff className="h-3 w-3 mr-1" />
+                Private
+              </Badge>
+            )}
+          </div>
+
+          <h1 className="text-3xl sm:text-5xl md:text-6xl tracking-tight leading-tight mb-6">
+            {post.title}
+          </h1>
+
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-8">
+            <span data-testid="text-date">{post.date || 'Recently'}</span>
+            <span>·</span>
+            <span data-testid="text-readtime">{post.readTime || '5 min read'}</span>
+            {isEdited && (
+              <>
+                <span>·</span>
+                <span className="text-xs italic">Last edited</span>
+              </>
+            )}
+          </div>
         </div>
 
-        <h1 className="text-3xl sm:text-5xl md:text-6xl tracking-tight leading-tight mb-6">
-          {post.title}
-        </h1>
+        {illustrationExists && paragraphs.length < 5 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="w-full my-4"
+          >
+            <img
+              src={illustrationUrl}
+              alt={`Illustration for ${post.title}`}
+              className="w-full h-auto block"
+              data-testid="img-illustration"
+              onError={() => setIllustrationError(true)}
+            />
+          </motion.div>
+        )}
 
-        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-8">
-          <span data-testid="text-date">{post.date || 'Recently'}</span>
-          <span>·</span>
-          <span data-testid="text-readtime">{post.readTime || '5 min read'}</span>
-          {isEdited && (
-            <>
-              <span>·</span>
-              <span className="text-xs italic">Last edited</span>
-            </>
-          )}
-        </div>
-
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 pb-8 sm:pb-12">
         <div className="prose prose-lg max-w-none">
           {(() => {
             const isLongPost = paragraphs.length >= 5;
             const useFloatedLayout = illustrationExists && isLongPost;
-            const useCenteredLayout = illustrationExists && !isLongPost;
 
             return paragraphs.map((para, i) => {
 
             if (i === 0) {
               return (
                 <div key={i}>
-                  {useCenteredLayout && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.2 }}
-                      className="my-8 w-full"
-                    >
-                      <img
-                        src={illustrationUrl}
-                        alt={`Illustration for ${post.title}`}
-                        className="w-full h-auto block"
-                        data-testid="img-illustration"
-                        onError={() => setIllustrationError(true)}
-                      />
-                    </motion.div>
-                  )}
                   <motion.p
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -441,6 +446,7 @@ export default function BlogPost({ post, onBack }: BlogPostProps) {
             );
           });
           })()}
+        </div>
         </div>
       </motion.article>
     </div>
